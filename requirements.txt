@@ -1,0 +1,10 @@
+Django==2.0
+django-cors-headers==2.1.0
+mysqlclient==1.3.13
+py==1.4.34
+PyMySQL==0.7.11
+pytz==2017.2
+Token==1.8.6
+uWSGI==2.0.15
+Pillow==4.3.0
+requests
