@@ -177,7 +177,7 @@ class CheckUserIdentity(MiddlewareMixin):
         else:
             return None
             
-        if user_data[2] != 'admin':
+        if user_data['Group'] != 'admin':
             #检查接口访问权限
             try:
                 PermissionsGroup.objects.get(Q(group=user_data[2]) & Q(permissions_id__url=self.path) & Q(is_allow=-1))

@@ -44,6 +44,7 @@ from app.api.utils import get_listing
 from app.api.auth import get_user_object
 from app.api.auth import get_user_name
 from app.api.auth import get_uid
+from app.api.auth import get_user_group
 
 # get cureent time
 curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -204,6 +205,22 @@ def bug_list(request):
             conditions.children.append(Q(**{"creator_id":get_uid(request)}))
         if operate == "notClosed":
             q1.children.append(~Q(**{"status":"Closed"}))
+        if operate == "WaitPending":
+            my_group = get_user_group(request)
+            if my_group == 'test':
+                q2 = Q()
+                q2.connector = "AND"
+                q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
+                q2.children.append(~Q(**{"status":"closed"}))
+                conditions.add(q2, "AND")
+            else:
+                q2 = Q()
+                q2.connector = "OR"
+                q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
+                q2.children.append(Q(**{"status":"Open"}))
+                q2.children.append(Q(**{"status":"Reopen"}))
+                q2.children.append(Q(**{"status":"Hang-up"}))
+                conditions.add(q2, "AND")
         if operate == "NotResolved":
             q2 = Q()
             q2.connector = "OR"

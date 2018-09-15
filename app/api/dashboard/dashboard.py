@@ -25,6 +25,7 @@ from app.models import Bug
 from app.api.utils import get_listing
 from app.api.auth import get_user_object
 from app.api.auth import get_uid
+from app.api.auth import get_user_group
 
 @require_http_methods(['GET'])
 def data_statistics(request):
@@ -35,27 +36,36 @@ def data_statistics(request):
         return JsonResponse({"status":40001,"msg":"产品不能为空哦"})
 
     data = {
-        "AssignedByMe": "",
-        "ResolvedByMe":"",
-        "NotResolved":"",
+        "WaitPending": "",
+        "Fixed":"",
+        "NotFixed":"",
         "CreatedByMe":"",
         "ClosedByMe":"",
         "Resolved":""
     }
     # 分派给我(需要我处理的)
     try:
-        data_assignedTo = Bug.objects.\
-            filter(
-                Q(assignedTo_id=uid) & 
-                Q(product_code=product_code) & 
-                Q(status='Open') | 
-                Q(status='Hang-up') |
-                Q(status='Reopen')
-            ).count()
+        my_group = get_user_group(request)
+        if my_group == 'test':
+            WaitPending = Bug.objects.\
+                filter(
+                    Q(assignedTo_id=uid) & 
+                    Q(product_code=product_code) & 
+                    ~Q(status='closed')
+                ).count()
+        else:
+            WaitPending = Bug.objects.\
+                filter(
+                    Q(assignedTo_id=uid) & 
+                    Q(product_code=product_code) & 
+                    Q(status='Open') | 
+                    Q(status='Hang-up') |
+                    Q(status='Reopen')
+                ).count()
     except Exception as e:
-        data_assignedTo = 0
+        WaitPending = 0
     finally:
-        data['AssignedByMe']= data_assignedTo
+        data['WaitPending']= WaitPending
 
     # 我解决的
     try:
@@ -67,7 +77,7 @@ def data_statistics(request):
 
     # 所有未解决的
     try:
-        data_AllNotResolved = Bug.objects.\
+        data_not_Fixed = Bug.objects.\
             filter(
                 Q(product_code=product_code) & 
                 Q(status='Open') | 
@@ -75,9 +85,9 @@ def data_statistics(request):
                 Q(status='Reopen')
             ).count()
     except Exception as e:
-        data_AllNotResolved = 0
+        data_not_Fixed = 0
     finally:
-        data['NotResolved']= data_AllNotResolved
+        data['NotFixed']= data_not_Fixed
 
     # 我创建的
     try:
@@ -97,11 +107,11 @@ def data_statistics(request):
 
     # 所有已解决待关闭
     try:
-        data_Resolved = Bug.objects.filter(Q(product_code=product_code) & Q(status='Resolved')).count()
+        data_Fixed = Bug.objects.filter(Q(product_code=product_code) & Q(status='Fixed')).count()
     except Exception as e:
-        data_Resolve = 0
+        data_Fixed = 0
     finally:
-        data['Resolved']= data_Resolved
+        data['Fixed']= data_Fixed
 
     return JsonResponse({"status":20000,"data":data})
 
