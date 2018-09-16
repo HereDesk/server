@@ -22,6 +22,10 @@ from app.models import Authentication
 from app.models import ProductMembers
 from app.models import Permissions
 from app.models import LoggedLog
+
+from app.models import Permissions
+from app.models import PermissionsGroup
+
 from app.api.auth import get_user_object
 
 try:
@@ -132,6 +136,7 @@ class CheckUserIdentity(MiddlewareMixin):
         except Exception as e:
             return JsonResponse({"status":14404,"msg":"异常请求."})
 
+        print("----------------------------")
         print(ip,user_agent,platform,browser)
             
     def process_view(self,request, view, args, kwargs):
@@ -179,10 +184,13 @@ class CheckUserIdentity(MiddlewareMixin):
             
         if user_data['Group'] != 'admin':
             #检查接口访问权限
-            try:
-                PermissionsGroup.objects.get(Q(group=user_data[2]) & Q(permissions_id__url=self.path) & Q(is_allow=-1))
-            except Exception as e:
-                return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})     
+            is_allow = PermissionsGroup.objects.\
+                filter(Q(group=user_data['Group']) & Q(permissions_id__url=self.path) & Q(is_allow=1)).count()
+            if is_allow == 1:
+                return None
+            else:
+                print("--> {0} : 访问被拒绝".format(self.path))
+                return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})  
         else:
             return None
         
