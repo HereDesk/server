@@ -71,7 +71,7 @@ def login(request):
                     realname=F('uid__realname')
                     ).\
                 values("token","uid","group","realname")
-            return JsonResponse({"status": 10000, "msg": u"恭喜您！登录成功", "data": list(ut)})
+            return JsonResponse({"status": 10000, "msg": u"恭喜您！登录成功", "data": list(ut)[0]})
         else:
             return JsonResponse({"status": 10004, "msg": u"用户名或密码错误。"})
     else:
