@@ -158,7 +158,7 @@ class CheckUserIdentity(MiddlewareMixin):
                 cookie = request.META['HTTP_COOKIE'].split("=")[1]
                 token = cookie
             else:
-                return JsonResponse({"status":14402,"msg":"无法识别身份，请求中止."})
+                return JsonResponse({"status":14402,"msg":"请求头缺少token, 无法识别身份，请求中止."})
             
         # check user token 
         try:
