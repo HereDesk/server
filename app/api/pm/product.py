@@ -36,7 +36,7 @@ def product_release(request):
             data.append({
                 'product_code':i['product_code'],
                 'product_name':i['product_name'],
-                'data':list(Release.objects.filter(product_code=i['product_code']).values('version'))
+                'data':list(Release.objects.filter(product_code=i['product_code']).values('version').order_by('-create_time'))
                 })
         return JsonResponse({"status":20000,"data":data})
 

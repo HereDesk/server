@@ -495,6 +495,10 @@ def edit(request):
         except Exception as e:
             print(e)
             return JsonResponse({"status":40001,"msg":"指派人不存在"})
+        else:
+            status = Bug.objects.fiter(bug_id=bug_id).values_list("status")[0]
+            if status == 'New':
+                bug_obj.status = BugStatus.objects.get(key="Open")
 
     # check product_code
     if "product_code" in req:
