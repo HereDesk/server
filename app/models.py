@@ -495,30 +495,61 @@ class LoggedLog(models.Model):
 """
   权限
 """
-class Permissions(models.Model):
+class Api(models.Model):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
-    name = models.CharField(u"权限名称",unique=True,max_length=100)
-    code = models.CharField(u"权限code",unique=True,max_length=200)
+    api_name = models.CharField(u"权限名称",unique=True,max_length=100)
+    api_code = models.CharField(u"权限code",unique=True,max_length=200)
     url = models.CharField(max_length=200)
     flag = models.CharField(u"标记",max_length=200)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:
-        db_table = "t_permissions"
+        db_table = "t_api"
 
 """
   权限
 """
-class PermissionsGroup(models.Model):
+class ApiPermissions(models.Model):
     is_allow = (
         ("-1", u"不允许"),
         ("1", u"允许")
     )
     id = models.AutoField(primary_key=True)
-    permissions_id = models.ForeignKey(Permissions,to_field="id",on_delete=models.CASCADE,db_column="permissions_id")
+    api_id = models.ForeignKey(Api,to_field="id",on_delete=models.CASCADE,db_column="api_id")
     group = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="group")
     is_allow = models.IntegerField(choices=is_allow,default=1)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:
-        db_table = "t_permissions_group"
+        db_table = "t_api_permissions"
+
+
+"""
+  权限
+"""
+class Pages(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
+    page_name = models.CharField(u"权限名称",unique=True,max_length=100)
+    page_url = models.CharField(u"权限code",max_length=200,unique=True)
+    flag = models.CharField(u"标记",max_length=200)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+
+    class Meta:
+        db_table = "t_pages"
+
+"""
+  权限
+"""
+class PagesPermissions(models.Model):
+    is_allow = (
+        ("-1", u"不允许"),
+        ("1", u"允许")
+    )
+    id = models.AutoField(primary_key=True)
+    page_id = models.ForeignKey(Pages,to_field="id",on_delete=models.CASCADE,db_column="page_id")
+    group = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="group")
+    is_allow = models.IntegerField(choices=is_allow,default=1)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+
+    class Meta:
+        db_table = "t_pages_permissions"

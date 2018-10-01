@@ -47,4 +47,4 @@ insert into `t_group` ( `group`, `name`, `create_time`, `update_time`) values ( 
 insert into `t_group` ( `group`, `name`, `create_time`, `update_time`) values ( 'developer', '开发', '2018-08-20 17:04:50.000000', '2018-08-20 17:04:52.000000');
 insert into `t_group` ( `group`, `name`, `create_time`, `update_time`) values ( 'pm', '产品', '2018-08-20 17:05:05.000000', '2018-08-20 17:05:07.000000');
 insert into `t_group` ( `group`, `name`, `create_time`, `update_time`) values ( 'design', '设计', '2018-08-20 17:05:21.000000', '2018-08-20 17:05:23.000000');
-insert into `t_group` ( `group`, `name`, `create_time`, `update_time`) values ( 'manager', '领导层', '2018-08-20 17:46:48.000000', '2018-08-20 17:46:50.000000');
+insert into `t_group` ( `group`, `name`, `create_time`, `update_time`) values ( 'manager', '管理层', '2018-08-20 17:46:48.000000', '2018-08-20 17:46:50.000000');

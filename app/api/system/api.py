@@ -20,8 +20,8 @@ from django.views.decorators.http import require_http_methods
 from app.models import Authentication
 from app.models import User
 from app.models import Group
-from app.models import Permissions
-from app.models import PermissionsGroup
+from app.models import Api
+from app.models import ApiPermissions
 
 from app.api.utils import get_listing
 from app.api.auth import get_user_object
@@ -41,16 +41,16 @@ def permissions_list(request):
 
     try:
         data = []
-        permissions_flag = Permissions.objects.all().values("flag").distinct()
-        permissions_list = PermissionsGroup.objects.filter(Q(group=group)).\
+        api_flag = Api.objects.all().values("flag").distinct()
+        api_permissions_list = ApiPermissions.objects.filter(Q(group=group)).\
             annotate(
-                flag=F("permissions_id__flag"),
-                name=F("permissions_id__name")
+                flag=F("api_id__flag"),
+                name=F("api_id__name")
                 ).\
-            values("permissions_id","is_allow","flag","name")
-        for i in permissions_flag:
+            values("api_id","is_allow","flag","name")
+        for i in api_flag:
             temp = []
-            for perm in permissions_list:
+            for perm in api_permissions_list:
                 if perm["flag"] == i["flag"]:
                     temp.append(perm)
                 i["data"] = temp
@@ -78,10 +78,10 @@ def create(request):
         return JsonResponse({"status":40001,"msg":"缺少参数"})
 
     try:
-        p = Permissions(
-            name = name,
+        p = Api(
+            api_name = name,
             url = url,
-            code = code,
+            api_code = code,
             flag = flag
             )
         p.save()
@@ -98,22 +98,22 @@ def create(request):
 def manage(request):
     try:
         req = json.loads(request.body)
-        permissions_id = req['permissions_id']
+        api_id = req['permissions_id']
         group = req['group']
         is_allow = req['is_allow']
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"缺少参数"})
 
     try:
-        is_check = PermissionsGroup.objects.filter(Q(permissions_id=permissions_id) & Q(group=group)).values('id')
+        is_check = ApiPermissions.objects.filter(Q(api_id=api_id) & Q(group=group)).values('id')
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
     print(is_check)
     if len(is_check) == 0:
         try:
-            pg = PermissionsGroup(
-                permissions_id = Permissions.objects.get(id=permissions_id),
+            pg = ApiPermissions(
+                api_id = Permissions.objects.get(id=api_id),
                 group = Group.objects.get(group=group),
                 is_allow = is_allow
                 )
@@ -125,7 +125,7 @@ def manage(request):
     else:
         data_id = list(is_check)[0]["id"]
         try:
-            p = PermissionsGroup.objects.get(id=data_id)
+            p = ApiPermissions.objects.get(id=data_id)
             p.is_allow = is_allow
             p.save()
         except Exception as e:

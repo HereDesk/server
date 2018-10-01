@@ -20,11 +20,10 @@ from django.db.models import Sum
 from app.models import User
 from app.models import Authentication
 from app.models import ProductMembers
-from app.models import Permissions
 from app.models import LoggedLog
 
-from app.models import Permissions
-from app.models import PermissionsGroup
+from app.models import Api
+from app.models import ApiPermissions
 
 from app.api.auth import get_user_object
 
@@ -184,8 +183,8 @@ class CheckUserIdentity(MiddlewareMixin):
             
         if user_data['Group'] != 'admin':
             #检查接口访问权限
-            is_allow = PermissionsGroup.objects.\
-                filter(Q(group=user_data['Group']) & Q(permissions_id__url=self.path) & Q(is_allow=1)).count()
+            is_allow = ApiPermissions.objects.\
+                filter(Q(group=user_data['Group']) & Q(api_id__url=self.path) & Q(is_allow=1)).count()
             if is_allow == 1:
                 return None
             else:

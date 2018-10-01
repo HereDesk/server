@@ -496,7 +496,7 @@ def edit(request):
             print(e)
             return JsonResponse({"status":40001,"msg":"指派人不存在"})
         else:
-            status = Bug.objects.fiter(bug_id=bug_id).values_list("status")[0]
+            status = Bug.objects.filter(bug_id=bug_id).values_list("status")[0]
             if status == 'New':
                 bug_obj.status = BugStatus.objects.get(key="Open")
 
