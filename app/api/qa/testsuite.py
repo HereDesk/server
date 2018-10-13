@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from app.models import Product
+from app.models import ProductMembers
 
 from app.models import Authentication
 
@@ -25,6 +26,7 @@ from app.models import TestSuite
 from app.models import TestSuiteCell
 
 from app.api.utils import get_listing
+from app.api.auth import get_uid
 from app.api.auth import get_user_object
 
 # get cureent time
@@ -66,13 +68,13 @@ def create(request):
 @csrf_exempt
 @require_http_methods(["GET"])
 def testsuite_list(request):
+	user_id = get_uid(request)
+	query_data = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
+		annotate(product_name=F('product_code__product_name'),create_time=F('product_code__create_time')).\
+		values_list('product_code','product_name').order_by('-create_time')
+	product_list = list(query_data[0])
 	try:
-		product_code = request.GET["product_code"]
-	except Exception as e:
-		return JsonResponse({"status":40001,"msg":"product信息错误"})
-
-	try:
-		suite_data = TestSuite.objects.filter(Q(product_code=product_code)).\
+		suite_data = TestSuite.objects.filter(product_code__in=product_list).\
 			values("id","product_code","suite_id","suite_name").order_by("-create_time")
 		tmp = []
 		for i in suite_data:
