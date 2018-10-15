@@ -178,11 +178,11 @@ def bug_list(request):
         q1.children.append(Q(**{"m2_id":m2_id}))
 
     if "severity" in req:
-        if rep["severity"] == "all":
+        if req["severity"] == "all":
             del req["severity"]
 
     if "priority" in req:
-        if rep["priority"] == "all":
+        if req["priority"] == "all":
             del req["priority"]
 
     if "product_code" in req:

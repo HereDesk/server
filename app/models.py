@@ -529,8 +529,8 @@ class ApiPermissions(models.Model):
 """
 class Pages(models.Model):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
-    page_name = models.CharField(u"权限名称",unique=True,max_length=100)
-    page_url = models.CharField(u"权限code",max_length=200,unique=True)
+    page_name = models.CharField(u"页面名称",unique=True,max_length=100)
+    page_url = models.CharField(u"页面url",max_length=200,unique=True)
     flag = models.CharField(u"标记",max_length=200)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 

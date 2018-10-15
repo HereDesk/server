@@ -71,8 +71,9 @@ def testsuite_list(request):
 	user_id = get_uid(request)
 	query_data = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
 		annotate(product_name=F('product_code__product_name'),create_time=F('product_code__create_time')).\
-		values_list('product_code','product_name').order_by('-create_time')
-	product_list = list(query_data[0])
+		values_list('product_code').order_by('-create_time')
+	product_list = list(query_data)
+	print(product_list)
 	try:
 		suite_data = TestSuite.objects.filter(product_code__in=product_list).\
 			values("id","product_code","suite_id","suite_name").order_by("-create_time")
