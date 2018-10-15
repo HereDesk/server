@@ -579,7 +579,7 @@ def edit(request):
             pass
         # 保存附件
         try:
-            if req["annex"] and req["annex"]:
+            if "annex" in req:
                 annex = req["annex"]
                 for f in annex:
                     aex = BugAnnex(
@@ -591,7 +591,7 @@ def edit(request):
             print(e)
             return JsonResponse({"status":20004,"msg":"bug附件错误"})
         else:
-            return JsonResponse({"status":20000,"msg":"缺陷修改成功"})
+            return JsonResponse({"status":20000,"msg":"修改成功"})
 
 """
   bug: 附件删除
