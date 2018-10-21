@@ -129,7 +129,8 @@ def date_create(request):
             data = Bug.objects.filter(q).\
                 annotate(datetime=TruncDate('create_time')).values('datetime').\
                 annotate(num=Count('id'))
-            # print(Bug.objects.filter(q).annotate(datetime=TruncDate('create_time')).values('datetime').annotate(num=Count('id')).query)
+            # print(Bug.objects.filter(q).annotate(datetime=TruncDate('create_time')).
+            # values('datetime').annotate(num=Count('id')).query)
         if qtype == 'year':
             data = Bug.objects.filter(q).\
                 annotate(datetime=ExtractMonth('create_time')).values('datetime').\

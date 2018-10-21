@@ -3,6 +3,7 @@
 import json
 import time
 from datetime import datetime
+from datetime import datetime,timedelta
 
 import operator
 from functools import reduce  
@@ -154,15 +155,19 @@ def handle_search(data):
                 field = "fixed_time__range"
             if "closed" in sdata:
                 field = "closed_time_range"
-            query.children.append(Q(**{field:wd}))
+            date_range = wd.split("#")
+            date_range[1] = datetime.strptime(date_range[1], "%Y-%m-%d") + timedelta(days = 1)
+            query.children.append(Q(**{field:date_range}))
+
+        print(query)
     return query
     
 @csrf_exempt
 @require_http_methods(["POST"])
 def search(request):
 
+    query = Q()
     q1 = Q()
-    q2 = Q()
     q1.connector = "AND"
 
     try:
@@ -170,8 +175,7 @@ def search(request):
         product_code = req["product_code"]
         Operators = req["Operators"]
         SearchType = req["SearchType"]
-        wd = req["wd"]
-        q1.children.append(Q(**{"product_code":"product_code"}))
+        q1.children.append(Q(**{"product_code":product_code}))
         productObject = Product.objects.get(product_code=product_code)
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"请求缺少必要的值."})
@@ -196,11 +200,12 @@ def search(request):
         else:
             status = req["status"]
             q1.children.append(Q(**{"status":status}))
+    q1.children.append(Q(**{"isDelete":0}))
 
     try:
-        q1.children.append(Q(**{"isDelete":0}))
-        q1.add(handle_search(req), "OR")
-        data = Bug.objects.filter(q1). \
+        query.add(q1, "AND")
+        query.add(handle_search(req), "AND")
+        data = Bug.objects.filter(query). \
             annotate(
                 creator_user=F("creator_id__realname"),
                 assignedTo_user=F("assignedTo_id__realname"),

@@ -22,6 +22,7 @@ from app.models import ModuleB
 from app.models import Authentication
 
 from app.models import TestCase
+from app.models import TestCaseFiles
 from app.models import TestCaseReview
 
 from app.api.utils import get_listing
@@ -57,11 +58,13 @@ def details(request):
 
         review = TestCaseReview.objects.filter(Q(case_id=case_id)).\
             annotate(realname=F("user_id__realname")).values("remark","realname","create_time","result")
+
+        annex = TestCaseFiles.objects.filter(Q(case_id=case_id) & Q(isDelete=0)).values("file_path")
     except Exception as e:
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status": 20000, "data": list(data)[0],"review":list(review)})
+        return JsonResponse({"status": 20000, "data": list(data)[0],"review":list(review),"annex":list(annex)})
 
 """
   搜索结果
@@ -85,9 +88,9 @@ def search(request):
         data = TestCase.objects.\
             filter(Q(product_code=product_code) &
                 Q(status=status) &
-                Q(isDelete=0) &
+                Q(isDelete=0) & (
                 Q(title__icontains=wd) |
-                Q(id__icontains=wd)
+                Q(id__icontains=wd))
                 ).\
             annotate(
                 creator=F("creator_id__realname")
@@ -133,7 +136,8 @@ def testcase_list(request):
                 creator=F("creator_id__realname")
                 ).\
             values("id","case_id","product_code","status","title","priority",
-                "isChange","isReview","creator","creator_id","create_time")
+                "isChange","isReview","creator","creator_id","create_time").\
+            order_by("-create_time")
     except Exception as e:
         return JsonResponse({"status": 20004, "msg": u"查询发生异常错误，请联系管理员."})
     else:
@@ -182,47 +186,40 @@ def testcase_valid_list(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def add(request):
-    res = json.loads(request.body)
+    req = json.loads(request.body)
 
     try:
-        product_code = res["product_code"]
+        product_code = req["product_code"]
+        category = req["category"]
+        title = req["title"]
+        ExpectedResult = req["ExpectedResult"]
+        steps = req["steps"]
     except Exception as e:
         print(e)
-        return JsonResponse({"status":20004,"msg":"产品信息不能为空哦"})
+        return JsonResponse({"status":20004,"msg":"产品信息、不能为空哦"})
 
-    try:
-        category = res["category"]
-    except Exception as e:
-        return JsonResponse({"status":40004,"msg":"用例类型不能为空哦"})
-
-    if "module_id" in res and len(res["module_id"]):
+    if "module_id" in req and len(req["module_id"]):
         try:
-            m1_id = ModuleA.objects.get(id=res["module_id"][0])
-            m2_id = ModuleB.objects.get(id=res["module_id"][1])
+            m1_id = ModuleA.objects.get(id=req["module_id"][0])
+            m2_id = ModuleB.objects.get(id=req["module_id"][1])
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
     else:
         m1_id = None
         m2_id = None
 
-    try:
-        DataInput = ""
-        precondition = ""
-        remark = ""
-        priority = ""
-        title = res["title"]
-        ExpectedResult = res["ExpectedResult"]
-        steps = res["steps"]
-        if "DataInput" in res:
-            DataInput = res["DataInput"]
-        if "precondition" in res:
-            precondition = res["precondition"]
-        if "remark" in res:
-            remark = res["remark"]
-        if "priority" in res:
-            priority = res["priority"]
-    except Exception as e:
-        return JsonResponse({"status":20004,"msg":"测试标题、步骤、预期结果不能为空哦"})
+    DataInput = ""
+    precondition = ""
+    remark = ""
+    priority = ""
+    if "DataInput" in req:
+        DataInput = req["DataInput"]
+    if "precondition" in req:
+        precondition = req["precondition"]
+    if "remark" in req:
+        remark = req["remark"]
+    if "priority" in req:
+        priority = req["priority"]
 
     if len(title) > 50:
         return JsonResponse({"status":20004,"msg":"标题字数应小于50."})
@@ -230,34 +227,49 @@ def add(request):
         return JsonResponse({"status":20004,"msg":"输入字数应小于500."})
     if len(ExpectedResult) > 500:
         return JsonResponse({"status":20004,"msg":"预期结果字数应小于500."})
-    if len(steps) > 1000:
-        return JsonResponse({"status":20004,"msg":"操作步骤字数应小于1000."})
+    if len(steps) > 5000:
+        return JsonResponse({"status":20004,"msg":"操作步骤字数应小于5000."})
     if len(remark) > 1000:
         return JsonResponse({"status":20004,"msg":"备注字数应小于1000."})
     if len(precondition) > 200 or len(DataInput) > 200 or len(remark) > 1000:
         return JsonResponse({"status":20004,"msg":"超出字数限制。请检查前置条件、测试输入、备注项."})
 
     try:
-        d = TestCase(
-                product_code = Product.objects.get(product_code=product_code),
-                title = title,
-                category = category,
-                DataInput = DataInput,
-                steps = steps,
-                expected_result = ExpectedResult,
-                precondition = precondition,
-                remark = remark,
-                creator_id = get_user_object(request),
-                priority = priority,
-                m1_id = m1_id,
-                m2_id = m2_id
+        data = TestCase(
+            product_code = Product.objects.get(product_code=product_code),
+            title = title,
+            category = category,
+            DataInput = DataInput,
+            steps = steps,
+            expected_result = ExpectedResult,
+            precondition = precondition,
+            remark = remark,
+            creator_id = get_user_object(request),
+            priority = priority,
+            m1_id = m1_id,
+            m2_id = m2_id
             )
-        d.save()
+        data.save()
     except Exception as e:
         print(e)
-        return JsonResponse({"status":20004,"msg":"保存失败"})
+        return JsonResponse({"status":20004,"msg":"用例保存失败"})
     else:
-        return JsonResponse({"status":20000,"msg":"保存成功"})
+        case_id = TestCase.objects.get(case_id=data.case_id)
+        # 保存附件
+        try:
+            if "annex" in req:
+                if req["annex"]:
+                    for f in req["annex"]:
+                        file = TestCaseFiles(
+                            case_id = case_id,
+                            file_path = f
+                            )
+                        file.save()
+        except Exception as e:
+            print(e)
+            return JsonResponse({"status":20004,"msg":"附件错误"})
+        else:
+            return JsonResponse({"status":20000,"msg":"用例保存成功"})
 
 """
   测试用例：失效操作
@@ -326,33 +338,33 @@ def del_testcase(request):
 @require_http_methods(["POST"])
 def edit(request):
     try:
-        res = json.loads(request.body)
-        testcase_id = res["case_id"]
+        req = json.loads(request.body)
+        testcase_id = req["case_id"]
         ttc = TestCase.objects.get(case_id=testcase_id)
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"用例ID不能为空,并且需有效"})
 
-    if "DataInput" in res:
-        ttc.DataInput = res["DataInput"]
-    if "precondition" in res:
-        ttc.precondition = res["precondition"]
-    if "remark" in res:
-        ttc.remark = res["remark"]
-    if "priority" in res:
-        ttc.priority = res["priority"]
-    if "steps" in res:
-        ttc.steps = res["steps"]
-    if "title" in res:
-        ttc.title = res["title"]
-    if "expected_result" in res:
-        ttc.expected_result = res["expected_result"]
-    if "category" in res:
-        ttc.category = res["category"]
+    if "DataInput" in req:
+        ttc.DataInput = req["DataInput"]
+    if "precondition" in req:
+        ttc.precondition = req["precondition"]
+    if "remark" in req:
+        ttc.remark = req["remark"]
+    if "priority" in req:
+        ttc.priority = req["priority"]
+    if "steps" in req:
+        ttc.steps = req["steps"]
+    if "title" in req:
+        ttc.title = req["title"]
+    if "expected_result" in req:
+        ttc.expected_result = req["expected_result"]
+    if "category" in req:
+        ttc.category = req["category"]
 
-    if "module_id" in res and len(res["module_id"]):
+    if "module_id" in req and len(req["module_id"]):
         try:
-            m1_id = ModuleA.objects.get(id=res["module_id"][0])
-            m2_id = ModuleB.objects.get(id=res["module_id"][1])
+            m1_id = ModuleA.objects.get(id=req["module_id"][0])
+            m2_id = ModuleB.objects.get(id=req["module_id"][1])
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
         else:
@@ -376,9 +388,9 @@ def edit(request):
 def review(request):
 
     try:
-        res = json.loads(request.body)
-        case_id = res["case_id"]
-        result = res["result"]
+        req = json.loads(request.body)
+        case_id = req["case_id"]
+        result = req["result"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"Result和case_id不能为空"})
 
@@ -387,8 +399,8 @@ def review(request):
     else:
         return JsonResponse({"status":40001,"msg":"Result无效"})
 
-    if "remark" in res:
-        remark = res["remark"]
+    if "remark" in req:
+        remark = req["remark"]
     else:
         remark = ""
 

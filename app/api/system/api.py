@@ -33,7 +33,7 @@ from app.api.auth import get_uid
 """
 @csrf_exempt
 @require_http_methods(["GET"])
-def permissions_list(request):
+def api_list(request):
     try:
         group = request.GET["group"]
     except Exception as e:
@@ -45,7 +45,7 @@ def permissions_list(request):
         api_permissions_list = ApiPermissions.objects.filter(Q(group=group)).\
             annotate(
                 flag=F("api_id__flag"),
-                name=F("api_id__name")
+                name=F("api_id__api_name")
                 ).\
             values("api_id","is_allow","flag","name")
         for i in api_flag:
@@ -66,7 +66,7 @@ def permissions_list(request):
 """
 @csrf_exempt
 @require_http_methods(["POST"])
-def create(request):
+def api_create(request):
     try:
         req = json.loads(request.body)
         name = req["name"]
@@ -95,10 +95,10 @@ def create(request):
 """
 @csrf_exempt
 @require_http_methods(["POST"])
-def manage(request):
+def api_manage(request):
     try:
         req = json.loads(request.body)
-        api_id = req['permissions_id']
+        api_id = req['api_id']
         group = req['group']
         is_allow = req['is_allow']
     except Exception as e:
@@ -109,7 +109,6 @@ def manage(request):
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
-    print(is_check)
     if len(is_check) == 0:
         try:
             pg = ApiPermissions(

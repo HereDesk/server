@@ -40,26 +40,29 @@ def pages_list(request):
         return JsonResponse({"status":40001,"msg":"参数错误"})
 
     try:
-        data = []
-        page_flag = Pages.objects.all().values("flag").distinct()
-        page_permissions_list = PagesPermissions.objects.filter(Q(group=group)).\
-            annotate(
-                flag=F("page_id__flag"),
-                name=F("page_id__page_name")
-                ).\
-            values("page_id","is_allow","flag","page_name")
-        for i in page_flag:
-            temp = []
-            for perm in page_permissions_list:
-                if perm["flag"] == i["flag"]:
-                    temp.append(perm)
-                i["data"] = temp
-            data.append(i)
+        tmp_data = []
+        pages_list = Pages.objects.all().values("id","page_name","page_url","flag")
+        perm_data = PagesPermissions.objects.filter(Q(group=group)).values("page_id","is_allow")
+        for pl in pages_list:
+            pl["is_allow"] = 0
+            tmp_data.append(pl)
+        if len(perm_data) > 0:
+            for i1 in perm_data:
+                for i2 in tmp_data:
+                    if i1["page_id"] == i2["id"]:
+                        i2["is_allow"] = i1["is_allow"]
+
+        flag_data = list(set([ i1["flag"] for i1 in tmp_data ]))
+        data = [ {"flag":i,"data":[]} for i in flag_data ]
+        for i1 in tmp_data:
+            for i2 in data:
+                if i1["flag"] == i2["flag"]:
+                    i2["data"].append(i1)
     except Exception as e:
         print(e)
         return JsonResponse({"status":20004,"msg":"没查到数据"})
     else:
-        return JsonResponse({"status":20000,"data":data})
+        return JsonResponse({"status":20000,"data":list(data)})
 
 """
     增加页面
@@ -103,13 +106,13 @@ def manage(request):
         return JsonResponse({"status":40001,"msg":"缺少参数"})
 
     try:
-        is_check = PagePermissions.objects.filter(Q(page_id=page_id) & Q(group=group)).values('id')
+        is_check = PagesPermissions.objects.filter(Q(page_id=page_id) & Q(group=group)).values('id')
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
     if len(is_check) == 0:
         try:
-            pg = PagePermissions(
+            pg = PagesPermissions(
                 page_id = Pages.objects.get(id=page_id),
                 group = Group.objects.get(group=group),
                 is_allow = is_allow
@@ -122,7 +125,7 @@ def manage(request):
     else:
         data_id = list(is_check)[0]["id"]
         try:
-            p = PagePermissions.objects.get(id=data_id)
+            p = PagesPermissions.objects.get(id=data_id)
             p.is_allow = is_allow
             p.save()
         except Exception as e:

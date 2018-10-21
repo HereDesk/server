@@ -9,6 +9,13 @@ from django.views.decorators.csrf import csrf_exempt
 
 @csrf_exempt
 def upload(request):
+    data_type = request.GET["type"]
+    if data_type == "bug":
+        path = "media/bug/"
+    elif data_type == "testcase":
+        path = "media/testcase/"
+    else:
+        path = "media/other/"
     img = request.FILES.get('images')
     if img:
         filename = uuid.uuid4().hex
@@ -16,9 +23,9 @@ def upload(request):
             fileinfo = uuid.uuid4().hex
         except Exception as e:
             return JsonResponse({"status":20004,"msg":"服务器出错了，无法保存文件"})
-        with open('media/bug/'+fileinfo, 'wb+') as destination:
+        with open(path+fileinfo, 'wb+') as destination:
             for chunk in img.chunks():
                 destination.write(chunk)
-        return JsonResponse({"status":20000,"name":'/media/bug/'+ fileinfo})
+        return JsonResponse({"status":20000,"name":path+ fileinfo})
     else:
         return JsonResponse({"status":20004,"msg":"无效文件名"})

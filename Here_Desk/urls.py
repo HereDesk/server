@@ -141,9 +141,9 @@ urlpatterns = [
     url(r'^api/qa/bug/annex/delete',bug.annex_delete,name='annex_delete'),
 
     # 权限控制
-    url(r'^api/system/api/create',api.create,name='api_create'),
-    url(r'^api/system/api/list',api.permissions_list,name='api_list'),
-    url(r'^api/system/api/manage',api.manage,name='api_manage'),
+    url(r'^api/system/api/create',api.api_create,name='api_create'),
+    url(r'^api/system/api/list',api.api_list,name='api_list'),
+    url(r'^api/system/api/manage',api.api_manage,name='api_manage'),
 
     url(r'^api/system/page/create',page.create,name='page_create'),
     url(r'^api/system/page/list',page.pages_list,name='page_list'),

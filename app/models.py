@@ -241,7 +241,7 @@ class TestCase(models.Model):
     title = models.TextField(u"用例名称",max_length=500)
     precondition = models.CharField(u"前置条件",max_length=500,null=True,blank=True,default=None)
     DataInput = models.TextField(u"数据输入",max_length=500,null=True,blank=True,default=None)
-    steps = models.TextField(u"操作步骤",max_length=1000)
+    steps = models.TextField(u"操作步骤",max_length=5000)
     expected_result = models.TextField(u"预期结果",max_length=500)
     priority = models.CharField(u"优先级:P1,P2,P3",max_length=10,null=True,blank=True,default=None)
     remark = models.TextField(u"备注",max_length=1000)
@@ -262,6 +262,23 @@ class TestCase(models.Model):
     class Meta:
         db_table = "t_testcase"
 
+"""
+  测试用例文件
+"""
+class TestCaseFiles(models.Model):
+    isDelete = (
+        ("0", u"否"),
+        ("1", u"是")
+    )
+    id = models.AutoField(primary_key=True)
+    case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id")
+    file_path = models.CharField(u"路径",max_length=200)
+    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+
+    class Meta:
+        db_table = "t_testcase_files"
+        
 """
   TEST: test case suite version
 """
@@ -447,18 +464,6 @@ class BugReport(models.Model):
 
     class Meta:
         db_table = "t_bug_report"
-
-"""
-  图片或文件
-"""
-class UploadImage(models.Model):
-
-    id = models.AutoField(primary_key=True)
-    annex = models.ImageField(u"annex",upload_to="annex/",max_length=255,default="")
-    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
-
-    class Meta:
-        db_table = "t_upload_image"
 
 """
   bug history

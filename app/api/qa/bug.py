@@ -370,6 +370,7 @@ def create(request):
             case_obj = None
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"case_id无效"})
+        
     try:
         if "cell_id" in req and req["cell_id"]:
             cell_id = req["cell_id"]
@@ -464,10 +465,10 @@ def create(request):
         # 保存附件
         try:
             if annex:
-                for a in annex:
+                for f in annex:
                     aex = BugAnnex(
                         bug_id = bug_id,
-                        url = a
+                        url = f
                         )
                     aex.save()
         except Exception as e:
