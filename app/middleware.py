@@ -181,16 +181,16 @@ class CheckUserIdentity(MiddlewareMixin):
         else:
             return None
             
-        # if user_data['Group'] != 'admin':
-        #     #检查接口访问权限
-        #     is_allow = ApiPermissions.objects.\
-        #         filter(Q(group=user_data['Group']) & Q(api_id__url=self.path) & Q(is_allow=1)).count()
-        #     if is_allow == 1:
-        #         return None
-        #     else:
-        #         print("--> {0} : 访问被拒绝".format(self.path))
-        #         return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})  
-        # else:
-        #     return None
+        if user_data['Group'] != 'admin':
+            #检查接口访问权限
+            is_allow = ApiPermissions.objects.\
+                filter(Q(group=user_data['Group']) & Q(api_id__url=self.path) & Q(is_allow=1)).count()
+            if is_allow == 1:
+                return None
+            else:
+                print("--> {0} : 访问被拒绝".format(self.path))
+                return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})  
+        else:
+            return None
         
 
