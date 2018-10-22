@@ -340,45 +340,65 @@ def edit(request):
     try:
         req = json.loads(request.body)
         testcase_id = req["case_id"]
-        ttc = TestCase.objects.get(case_id=testcase_id)
+        case_obj = TestCase.objects.get(case_id=testcase_id)
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"用例ID不能为空,并且需有效"})
 
     if "DataInput" in req:
-        ttc.DataInput = req["DataInput"]
+        case_obj.DataInput = req["DataInput"]
     if "precondition" in req:
-        ttc.precondition = req["precondition"]
+        case_obj.precondition = req["precondition"]
     if "remark" in req:
-        ttc.remark = req["remark"]
+        case_obj.remark = req["remark"]
     if "priority" in req:
-        ttc.priority = req["priority"]
+        case_obj.priority = req["priority"]
     if "steps" in req:
-        ttc.steps = req["steps"]
+        case_obj.steps = req["steps"]
     if "title" in req:
-        ttc.title = req["title"]
+        case_obj.title = req["title"]
     if "expected_result" in req:
-        ttc.expected_result = req["expected_result"]
+        case_obj.expected_result = req["expected_result"]
     if "category" in req:
-        ttc.category = req["category"]
+        case_obj.category = req["category"]
 
-    if "module_id" in req and len(req["module_id"]):
-        try:
-            m1_id = ModuleA.objects.get(id=req["module_id"][0])
-            m2_id = ModuleB.objects.get(id=req["module_id"][1])
-        except Exception as e:
-            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-        else:
-            ttc.m1_id = m1_id
-            ttc.m2_id = m2_id
+    if "module_id" in req:
+        if len(req["module_id"]) == 1:
+            try:
+                m1_id = ModuleA.objects.get(id=req["module_id"][0])
+            except Exception as e:
+                return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+            else:
+                case_obj.m1_id = m1_id
+        if len(req["module_id"]) == 2:      
+            try:
+                m2_id = ModuleB.objects.get(id=req["module_id"][1])
+            except Exception as e:
+                return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+            else:
+                case_obj.m2_id = m2_id 
+
     try:
         change_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        ttc.change_time = change_time
-        ttc.changer_id = get_user_object(request)
-        ttc.save()
+        case_obj.change_time = change_time
+        case_obj.changer_id = get_user_object(request)
+        case_obj.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"修改失败"})
     else:
-        return JsonResponse({"status":20000,"msg":"修改成功"})
+        # 保存附件
+        try:
+            if "annex" in req:
+                annex = req["annex"]
+                for f in annex:
+                    aex = TestCaseFiles(
+                        case_id = case_obj,
+                        file_path = f
+                        )
+                    aex.save()
+        except Exception as e:
+            return JsonResponse({"status":20004,"msg":"附件错误"})
+        else:
+            return JsonResponse({"status":20000,"msg":"修改成功"})
 
 """
   评审
@@ -425,3 +445,27 @@ def review(request):
         return JsonResponse({"status":20004,"msg":"操作失败"})
     else:
         return JsonResponse({"status":20000,"msg":"操作成功"})
+
+"""
+  Testcase: 附件删除
+"""
+@csrf_exempt
+@require_http_methods(["POST"])
+def annex_delete(request):
+    try:
+        req = json.loads(request.body)
+        file_path = req["file_path"]
+    except Exception as e:
+        return JsonResponse({"status":40001,"msg":"文件路径不能为空哦"})
+    
+    try:
+        file_obj = TestCaseFiles.objects.get(file_path=file_path)
+    except Exception as e:
+        return JsonResponse({"status":40001,"msg":"没找到数据"})
+    try:
+        file_obj.isDelete = 1
+        file_obj.save()
+    except Exception as e:
+        return JsonResponse({"status":20004,"msg":"附件删除失败"})
+    else:
+        return JsonResponse({"status":20000,"msg":"附件删除成功"})

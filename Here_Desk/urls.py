@@ -102,6 +102,7 @@ urlpatterns = [
 
     # 测试用例相关
     url(r'^api/qa/testcase/add', testcase.add, name='add'),
+    url(r'^api/qa/testcase/annex_delete',testcase.annex_delete,name='annex_delete'),
     url(r'^api/qa/testcase/list', testcase.testcase_list, name='testcase_list'),
     url(r'^api/qa/testcase/valid_list', testcase.testcase_valid_list, name='testcase_valid_list'),
     url(r'^api/qa/testcase/del', testcase.del_testcase, name='testcase_del'),

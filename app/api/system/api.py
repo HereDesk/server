@@ -40,26 +40,29 @@ def api_list(request):
         return JsonResponse({"status":40001,"msg":"参数错误"})
 
     try:
-        data = []
-        api_flag = Api.objects.all().values("flag").distinct()
-        api_permissions_list = ApiPermissions.objects.filter(Q(group=group)).\
-            annotate(
-                flag=F("api_id__flag"),
-                name=F("api_id__api_name")
-                ).\
-            values("api_id","is_allow","flag","name")
-        for i in api_flag:
-            temp = []
-            for perm in api_permissions_list:
-                if perm["flag"] == i["flag"]:
-                    temp.append(perm)
-                i["data"] = temp
-            data.append(i)
+        tmp_data = []
+        api_list = Api.objects.all().values("id","api_name","url","flag")
+        perm_data = ApiPermissions.objects.filter(Q(group=group)).values("api_id","is_allow")
+        for pl in api_list:
+            pl["is_allow"] = 0
+            tmp_data.append(pl)
+        if len(perm_data) > 0:
+            for i1 in perm_data:
+                for i2 in tmp_data:
+                    if i1["api_id"] == i2["id"]:
+                        i2["is_allow"] = i1["is_allow"]
+
+        flag_data = list(set([ i1["flag"] for i1 in tmp_data ]))
+        data = [ {"flag":i,"data":[]} for i in flag_data ]
+        for i1 in tmp_data:
+            for i2 in data:
+                if i1["flag"] == i2["flag"]:
+                    i2["data"].append(i1)
     except Exception as e:
         print(e)
         return JsonResponse({"status":20004,"msg":"没查到数据"})
     else:
-        return JsonResponse({"status":20000,"data":data})
+        return JsonResponse({"status":20000,"data":list(data)})
 
 """
     增加权限
@@ -69,8 +72,8 @@ def api_list(request):
 def api_create(request):
     try:
         req = json.loads(request.body)
-        name = req["name"]
-        code = req["code"]
+        name = req["api_name"]
+        code = req["api_code"]
         url = req["url"]
         flag = req["flag"]
     except Exception as e:
@@ -88,7 +91,7 @@ def api_create(request):
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
     else:
-        return JsonResponse({"status":20000,"msg":"增加路由成功"})
+        return JsonResponse({"status":20000,"msg":"增加api成功"})
 
 """
   管理权限
@@ -105,14 +108,13 @@ def api_manage(request):
         return JsonResponse({"status":40001,"msg":"缺少参数"})
 
     try:
-        is_check = ApiPermissions.objects.filter(Q(api_id=api_id) & Q(group=group)).values('id')
+        is_check_data = ApiPermissions.objects.filter(Q(api_id=api_id) & Q(group=group)).values('id')
     except Exception as e:
-        print(e)
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
-    if len(is_check) == 0:
+    if len(is_check_data) == 0:
         try:
             pg = ApiPermissions(
-                api_id = Permissions.objects.get(id=api_id),
+                api_id = Api.objects.get(id=api_id),
                 group = Group.objects.get(group=group),
                 is_allow = is_allow
                 )
@@ -122,7 +124,7 @@ def api_manage(request):
         else:
             return JsonResponse({"status":20000,"msg":"保存成功"})
     else:
-        data_id = list(is_check)[0]["id"]
+        data_id = list(is_check_data)[0]["id"]
         try:
             p = ApiPermissions.objects.get(id=data_id)
             p.is_allow = is_allow
