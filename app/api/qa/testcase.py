@@ -173,7 +173,7 @@ def testcase_valid_list(request):
         q1.children.append(Q(**{"status":0}))
         data = TestCase.objects.\
             filter(q1).\
-            values("case_id","title").order_by("id")
+            values("id","case_id","title").order_by("id")
     except Exception as e:
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})

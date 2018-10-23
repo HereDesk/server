@@ -26,6 +26,6 @@ def upload(request):
         with open(path+fileinfo, 'wb+') as destination:
             for chunk in img.chunks():
                 destination.write(chunk)
-        return JsonResponse({"status":20000,"name":path+ fileinfo})
+        return JsonResponse({"status":20000,"name":"/" + path+ fileinfo})
     else:
         return JsonResponse({"status":20004,"msg":"无效文件名"})
