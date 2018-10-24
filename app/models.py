@@ -71,6 +71,7 @@ class User(models.Model):
     )
     id = models.AutoField(primary_key=True)
     user_id = models.UUIDField(unique=True,default=uuid.uuid4, editable=False)
+    username = models.CharField(u"用户名",max_length=30,blank=True,null=True,default=None)
     email = models.CharField(u"Email",max_length=30,blank=True,null=True,default=None)
     password = models.CharField(u"Password",max_length=200,blank=True,null=True,default=None)
     mobile = models.CharField(u"手机号", max_length=11, null=True, blank=True, default=None)
