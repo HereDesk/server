@@ -28,6 +28,7 @@ from django.urls import path
 from app.api.user import login
 from app.api.user import passwd
 from app.api.user import user
+from app.api.user import pages
 
 from app.api.pm import product
 from app.api.pm import version
@@ -149,4 +150,7 @@ urlpatterns = [
     url(r'^api/system/page/create',page.create,name='page_create'),
     url(r'^api/system/page/list',page.pages_list,name='page_list'),
     url(r'^api/system/page/manage',page.manage,name='page_manage'),
+
+    # page
+    url(r'^api/user/pages',pages.pages,name='user_pages'),
 ]
