@@ -810,6 +810,7 @@ def reopen(request):
         bug_object.status = BugStatus.objects.get(key="Reopen")
         bug_object.assignedTo_id = assignedTo_obj
         bug_object.assignedTo_time = curremt_time
+        bug_object.solution = None
         bug_object.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"重新打开失败"})

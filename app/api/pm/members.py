@@ -35,8 +35,11 @@ def product_members(request):
     if 'group' in request.GET:
         group = request.GET['group']
         data = ProductMembers.objects.\
-            filter(Q(product_code=product_code) & Q(member_id__group=group)).\
-            order_by('-join_time').\
+            filter(
+                Q(product_code=product_code) & 
+                Q(member_id__group=group) & 
+                ~Q(member_id__realname__icontains=u"管理员")).\
+            order_by('-group').\
             annotate(
                 realname = F('member_id__realname'),
                 user_id = F('member_id'),
@@ -45,8 +48,11 @@ def product_members(request):
             values('user_id','realname','group','status','join_time','banned_time','position')
     else:
         data = ProductMembers.objects.\
-            filter(Q(product_code=product_code)).\
-            order_by('-join_time').\
+            filter(
+                Q(product_code=product_code) & 
+                ~Q(member_id__realname__icontains=u"管理员")
+                ).\
+            order_by('-group').\
             annotate(
                 realname = F('member_id__realname'),
                 user_id = F('member_id'),
