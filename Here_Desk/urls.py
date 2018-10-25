@@ -78,9 +78,11 @@ urlpatterns = [
 
     # 产品、版本号
     url(r'^api/pm/product_release', product.product_release, name='product_release'),
+    # 仅用于缺陷统计
     url(r'^api/pm/new_product_release', product.new_product_release, name='new_product_release'),
+    url(r'^api/pm/product/user_list', product.user_product_list, name='user_product_list'),
+    url(r'^api/pm/product/all_list', product.all_product_list, name='all_product_list'),
     url(r'^api/pm/product/create', product.create_product, name='create_product'),
-    url(r'^api/pm/get_product_name', product.get_product_name, name='get_product_name'),
 
     # module
     url(r'^api/pm/get_module', module.get_module, name='get_module'),

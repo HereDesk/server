@@ -207,6 +207,7 @@ def bug_list(request):
             q1.children.append(~Q(**{"status":"Closed"}))
         if operate == "WaitPending":
             my_group = get_user_group(request)
+            print("+++++",my_group)
             if my_group == 'test':
                 q2 = Q()
                 q2.connector = "AND"
@@ -215,11 +216,14 @@ def bug_list(request):
                 conditions.add(q2, "AND")
             else:
                 q2 = Q()
-                q2.connector = "OR"
+                q2.connector = "AND"
                 q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
-                q2.children.append(Q(**{"status":"Open"}))
-                q2.children.append(Q(**{"status":"Reopen"}))
-                q2.children.append(Q(**{"status":"Hang-up"}))
+                temp_q2_1 = Q()
+                temp_q2_1.connector = "OR"
+                temp_q2_1.children.append(Q(**{"status":"Open"}))
+                temp_q2_1.children.append(Q(**{"status":"Reopen"}))
+                temp_q2_1.children.append(Q(**{"status":"Hang-up"}))
+                q2.add(temp_q2_1, "AND")
                 conditions.add(q2, "AND")
         if operate == "NotResolved":
             q2 = Q()

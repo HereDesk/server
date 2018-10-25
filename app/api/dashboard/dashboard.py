@@ -58,9 +58,11 @@ def data_statistics(request):
                 filter(
                     Q(assignedTo_id=uid) & 
                     Q(product_code=product_code) & 
-                    Q(status='Open') | 
-                    Q(status='Hang-up') |
-                    Q(status='Reopen')
+                    (
+                        Q(status='Open') | 
+                        Q(status='Hang-up') |
+                        Q(status='Reopen')
+                    )
                 ).count()
     except Exception as e:
         WaitPending = 0
@@ -80,9 +82,11 @@ def data_statistics(request):
         data_not_Fixed = Bug.objects.\
             filter(
                 Q(product_code=product_code) & 
-                Q(status='Open') | 
-                Q(status='Hang-up') |
-                Q(status='Reopen')
+                ( 
+                    Q(status='Open') | 
+                    Q(status='Hang-up') |
+                    Q(status='Reopen')
+                )
             ).count()
     except Exception as e:
         data_not_Fixed = 0
