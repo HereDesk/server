@@ -43,7 +43,7 @@ def userinfo(request):
 """
 @require_http_methods(["GET"])
 def user_list(request):
-    data = User.objects.all().\
+    data = User.objects.filter(~Q(realname="超级管理员")).\
         annotate(group_name=F('group__name')).\
         values('user_id','email','realname','create_time','update_time','user_status','group_name','group','position')
     return JsonResponse({"status":20000,"data":list(data)})
@@ -65,7 +65,7 @@ def group(request):
 def banned(request):
     # 封禁权限检测
     uid = get_uid(request)
-    is_check_admin = User.objects.filter(Q(user_id=uid) & Q(user_status='1') & Q(group__group=u'Admin'))
+    is_check_admin = User.objects.filter(Q(user_id=uid) & Q(user_status='1'))
     if len(is_check_admin) == 0:
         return JsonResponse({"status":14444,"msg":"您不是管理员，不能进行此项操作"})
     
