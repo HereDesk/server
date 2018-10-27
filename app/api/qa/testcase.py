@@ -89,7 +89,7 @@ def search(request):
             filter(Q(product_code=product_code) &
                 Q(status=status) &
                 Q(isDelete=0) & (
-                Q(title__icontains=wd) |
+                Q(title__icontains=wd) | 
                 Q(id__icontains=wd))
                 ).\
             annotate(
@@ -120,6 +120,10 @@ def testcase_list(request):
         q1.children.append(Q(**{"product_code":product_code}))
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求值"})
+
+    if "m1_id" in request.GET:
+        m1_id = request.GET["m1_id"]
+        q1.children.append(Q(**{"m1_id":m1_id}))
 
     if "m2_id" in request.GET:
         m2_id = request.GET["m2_id"]

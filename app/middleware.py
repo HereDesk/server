@@ -2,6 +2,7 @@
 # -*- coding:utf8 -*-
 
 import os
+import time
 import datetime
 import json
 import uuid
@@ -21,6 +22,7 @@ from app.models import User
 from app.models import Authentication
 from app.models import ProductMembers
 from app.models import LoggedLog
+from app.models import UserLog
 
 from app.models import Api
 from app.models import ApiPermissions
@@ -120,8 +122,8 @@ class CheckUserIdentity(MiddlewareMixin):
             return JsonResponse({"status":14404,"msg":"异常请求method,被拦截"})
 
         # request user agent
-        user_agent = request.META["HTTP_USER_AGENT"]
-        platform, browser = get_user_agent(user_agent)
+        self.user_agent = request.META["HTTP_USER_AGENT"]
+        self.platform, self.browser = get_user_agent(self.user_agent)
 
         # request PATH
         self.path = request.path
@@ -129,14 +131,12 @@ class CheckUserIdentity(MiddlewareMixin):
         # request IP
         try:
             if "HTTP_X_FORWARDED_FOR" in request.META:
-                ip = request.META["HTTP_X_FORWARDED_FOR"]
+                self.ip = request.META["HTTP_X_FORWARDED_FOR"]
             else:
-                ip = request.META["REMOTE_ADDR"]
+                self.ip = request.META["REMOTE_ADDR"]
         except Exception as e:
             return JsonResponse({"status":14404,"msg":"异常请求."})
-
-        print("----------------------------")
-        print(ip,user_agent,platform,browser)
+        print(self.ip,self.user_agent,self.platform,self.browser)
             
     def process_view(self,request, view, args, kwargs):
 
@@ -171,12 +171,36 @@ class CheckUserIdentity(MiddlewareMixin):
             if user_data["user_status"] == 2:
                 return JsonResponse({"status": 14402, "msg": "已被封禁,请联系管理员."})
 
+        # record log
+        try:
+            today = time.strftime("%Y-%m-%d", time.localtime())
+            if "product_release" in self.path:
+                flag = "登录"
+                today_is_login = UserLog.objects.filter(Q(create_time__gte=today) & Q(flag="登录")).\
+                    values("id","user_id")
+                if len(today_is_login) == 0:
+                    record_log = UserLog(
+                        user_id = get_user_object(request),
+                        ip = self.ip,
+                        flag = flag
+                        )
+                    record_log.save()
+                else:
+                    log_id = list(today_is_login)[0]['id']
+                    record_log = UserLog.objects.get(id=log_id)
+                    record_log.update_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                    record_log.save()
+        except Exception as e:
+            print(e)
+            pass
+
         # 检查访问权限
         if user_data["Group"] == "admin":
             return None 
         elif self.path == "/api/user/pages":
             return None
         else:
+            # 检查接口权限
             is_allow = ApiPermissions.objects.\
                 filter(Q(group=user_data["Group"]) & Q(api_id__url=self.path) & Q(is_allow=1)).count()
             if is_allow == 1:

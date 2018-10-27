@@ -499,6 +499,20 @@ class LoggedLog(models.Model):
         db_table = "t_logged_log"
 
 """
+  用户的log
+"""
+class UserLog(models.Model):
+    id = models.AutoField(primary_key=True)
+    user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,null=True,db_column="user_id")
+    ip = models.CharField(u"ip",blank=True,null=True,default=None,max_length=20)
+    flag = models.CharField(u"说明",max_length=200,blank=True,null=True,default=None)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+
+    class Meta:
+        db_table = "t_user_log"
+
+"""
   权限
 """
 class Api(models.Model):
