@@ -270,7 +270,7 @@ def add(request):
                             )
                         file.save()
         except Exception as e:
-            print(e)
+            TestCase.objects.get(case_id=case_id).delete()
             return JsonResponse({"status":20004,"msg":"附件错误"})
         else:
             return JsonResponse({"status":20000,"msg":"用例保存成功"})

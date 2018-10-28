@@ -476,6 +476,7 @@ def create(request):
                         )
                     aex.save()
         except Exception as e:
+            Bug.objects.get(bug_id=bug_id).delete()
             return JsonResponse({"status":20004,"msg":"bug附件错误"})
         else:
             return JsonResponse({"status":20000,"msg":"缺陷保存成功"})
