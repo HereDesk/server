@@ -98,7 +98,7 @@ urlpatterns = [
     url(r'^api/pm/release/list',version.get_release, name='get_release'),
 
     # 人员product_members
-    url(r'^api/pm/member/list',members.product_members, name='product_members'),
+    url(r'^api/pm/member/list',members.members_list, name='members_list'),
     url(r'^api/pm/member/join',members.product_members_join, name='product_members_join'),
     url(r'^api/pm/member/ban',members.product_members_ban, name='product_members_ban'),
     url(r'^api/pm/member/rejoin',members.product_members_rejoin, name='product_members_rejoin'),

@@ -131,6 +131,9 @@ def create_product(request):
     if len(product_name) > 20 | len(product_name) < 2:
         return JsonResponse({"status":20004,"msg":"编号长度的合理范围为1到20位"})
 
+    is_check = Product.objects.filter(Q(product_code=product_code) | Q(product_name=product_name)).count()
+    if is_check > 0:
+        return JsonResponse({"status":"20004","msg":"此项目名称已存在哦"})
     try:
         p = Product(
             product_code = product_code,
@@ -143,4 +146,15 @@ def create_product(request):
         print(e)
         return JsonResponse({"status":20004,"msg":"保存失败"})
     else:
+        try:
+            pcode_object = Product.objects.get(product_code=product_code)
+            member = ProductMembers(
+                member_id = get_user_object(request),
+                product_code = pcode_object,
+                status = 0
+                )
+            member.save()
+        except Exception as e:
+            print(e)
+            pass
         return JsonResponse({"status":20000,"msg":"产品增加成功！快去增加产品版本、成员信息吧"})

@@ -25,7 +25,7 @@ curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
   项目组成员
 """
 @require_http_methods(["GET"])
-def product_members(request):
+def members_list(request):
     
     try:
         product_code = request.GET['product_code']
