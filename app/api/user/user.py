@@ -159,6 +159,7 @@ def add(request):
             user_status=1,
             realname=realname,
             group=user_group,
+            identity=1,
             position=position)
         create_user.save()
     except Exception as e:

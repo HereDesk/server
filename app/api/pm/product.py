@@ -17,6 +17,7 @@ from app.models import ProductMembers
 from app.api.auth import get_user_object
 from app.api.auth import get_uid
 from app.api.auth import _auth
+from app.api.auth import get_myinfo
 
 """
   获取项目与版本（用户）
@@ -28,7 +29,6 @@ def product_release(request):
     product = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
         annotate(product_name=F('product_code__product_name'),create_time=F('product_code__create_time')).\
         values('product_code','product_name').order_by('-create_time')
-    print(product)
     if len(product) == 0:
         return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
     else:
@@ -84,15 +84,33 @@ def user_product_list(request):
 # @csrf_exempt
 @require_http_methods(["GET"])
 def all_product_list(request):
-    try:
-        data = Product.objects.filter(status=0).\
-            annotate(creator=F('creator_id__realname')).\
-            order_by('-create_time').\
-            values('product_name','product_code','create_time','creator')
-    except Exception as e:
-        return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
+    userinfo = get_myinfo(request)
+    if userinfo["identity"] == 0 and userinfo["group"] == "admin":
+        try:
+            data = Product.objects.filter(status=0).\
+                annotate(creator=F('creator_id__realname')).\
+                order_by('-create_time').\
+                values('product_name','product_code','create_time','creator')
+        except Exception as e:
+            return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"data":list(data)})
+        try:
+            uid = userinfo["uid"]
+            myself_product = Product.objects.filter(creator_id=uid).\
+                annotate(
+                    creator=F('creator_id__realname')
+                ).\
+                values('product_name','product_code','create_time','creator')
+            my_join_product = ProductMembers.objects.filter(Q(member_id=uid) & Q(status=0)).\
+                annotate(
+                    product_name=F('product_code__product_name'),\
+                    create_time=F('product_code__create_time'),
+                    creator=F('product_code__creator_id__realname')).\
+                values('product_code','product_name','create_time','creator')
+            data = list(myself_product) + list(my_join_product)
+        except Exception as e:
+            return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
+    return JsonResponse({"status":20000,"data":list(data)})
 
 """
   产品：create

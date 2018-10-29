@@ -69,6 +69,10 @@ class User(models.Model):
         ("1",u"正常"),
         ("2",u"封禁"),
     )
+    identity = (
+        ("0",u"超级管理员"),
+        ("1",u"普通用户"),
+    )
     id = models.AutoField(primary_key=True)
     user_id = models.UUIDField(unique=True,default=uuid.uuid4, editable=False)
     username = models.CharField(u"用户名",max_length=30,blank=True,null=True,default=None)
@@ -84,6 +88,7 @@ class User(models.Model):
     province = models.CharField(u"省份",max_length=20,null=True,blank=True,default=None)
     city = models.CharField(u"城市",max_length=20,null=True,blank=True,default=None)
     source = models.CharField(u"来源",max_length=20,null=True,blank=True,default=None)
+    identity = models.IntegerField(u"用户身份",choices=identity)
     create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 

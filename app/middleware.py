@@ -182,7 +182,7 @@ class CheckUserIdentity(MiddlewareMixin):
             today = time.strftime("%Y-%m-%d", time.localtime())
             if "product_release" in self.path:
                 flag = "登录"
-                today_is_login = UserLog.objects.filter(Q(create_time__gte=today) & Q(flag="登录")).\
+                today_is_login = UserLog.objects.filter(Q(create_time__gte=today) & Q(flag="登录") & Q(ip=self.ip)).\
                     values("id","user_id")
                 if len(today_is_login) == 0:
                     record_log = UserLog(

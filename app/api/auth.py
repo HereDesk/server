@@ -20,18 +20,16 @@ def get_token(request):
   get myinfo
 """
 def get_myinfo(request):
-    try:
-        token = get_token(request)
-        user = Authentication.objects.filter(token=token).\
-            annotate(
-                group=F('uid__group'),
-                realname=F('uid__realname'),
-                position=F('uid__position')
-                ).\
-            values('uid','group','realname','position')
-        return list(user)[0]
-    except Exception as e:
-        return JsonResponse({"status":40004,"msg":"服务器开小差了"})
+    token = get_token(request)
+    user = Authentication.objects.filter(token=token).\
+        annotate(
+            group=F('uid__group'),
+            realname=F('uid__realname'),
+            position=F('uid__position'),
+            identity=F('uid__identity')
+            ).\
+        values('uid','group','realname','position','identity')
+    return list(user)[0]
 
 
 """
