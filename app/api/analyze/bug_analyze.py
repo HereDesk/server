@@ -165,22 +165,28 @@ def my_today(request):
 
     try:
         data = ''
-        if group == 'developer':
+        if group == 'developer' or group == 'test':
             fixed = Bug.objects.filter(Q(fixed_time__gte=today) & Q(fixed_id=uid)).\
                 aggregate(fixed=Count('fixed_time'))
             residue = Bug.objects.filter(Q(assignedTo_id=uid) & ~Q(status='Fixed') & ~Q(status='Closed')).\
                 aggregate(residue=Count('id'))
-            total = Bug.objects.filter(Q(assignedTo_id=uid) | Q(fixed_id=uid)).\
-                aggregate(total=Count('id'))
-            data = dict(fixed,**residue,**total)
-        if group == 'test':
-            create = Bug.objects.filter(Q(create_time__gte=today) & Q(creator_id=uid)).\
+            create = Bug.objects.filter(Q(create_time__gte=today)).\
                 aggregate(create=Count('create_time'))
             closed = Bug.objects.filter(Q(closed_time__gte=today) & Q(closed_id=uid) & Q(status='Closed')).\
                 aggregate(closed=Count('closed_time'))
-            hangUp = Bug.objects.filter(Q(hangUp_time__gte=today) & Q(hangUp_id=uid) & Q(status='HangUp')).\
+            data = dict(create,**closed,**fixed,**residue)
+        else:
+            fixed = Bug.objects.filter(Q(fixed_time__gte=today)).\
+                aggregate(fixed=Count('fixed_time'))
+            residue = Bug.objects.filter(~Q(status='Fixed') & ~Q(status='Closed')).\
+                aggregate(residue=Count('id'))
+            create = Bug.objects.filter(Q(create_time__gte=today)).\
+                aggregate(create=Count('create_time'))
+            closed = Bug.objects.filter(Q(closed_time__gte=today) & Q(status='Closed')).\
+                aggregate(closed=Count('closed_time'))
+            hangUp = Bug.objects.filter(Q(hangUp_time__gte=today) & Q(status='Hang-Up')).\
                 aggregate(hangUp=Count('hangUp_time'))
-            data = dict(create,**closed,**hangUp)
+            data = dict(create,**closed,**hangUp,**fixed,**residue)
     except Exception as e:
         print(e)
         return JsonResponse({'status':40004,"msg":"服务器开小差了，请联系管理员"})

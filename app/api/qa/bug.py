@@ -851,8 +851,8 @@ def hangup(request):
 
     try:
         bug_object.status = BugStatus.objects.get(key="Hang-up")
-        bug_object.hangUpBy = get_user_object(request)
-        bug_object.hangUpByDate = curremt_time
+        bug_object.hangUp_id = get_user_object(request)
+        bug_object.hangUp_time = curremt_time
         bug_object.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"延期操作失败"})
