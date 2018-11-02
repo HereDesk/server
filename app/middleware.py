@@ -158,7 +158,7 @@ class CheckUserIdentity(MiddlewareMixin):
             if request.META.get("HTTP_COOKIE"):
                 cookie = request.META["HTTP_COOKIE"].split("=")[1]
             
-            # token = cookie
+            token = cookie
             if token:
                 pass
             else:
