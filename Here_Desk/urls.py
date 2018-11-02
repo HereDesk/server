@@ -114,6 +114,7 @@ urlpatterns = [
     url(r'^api/qa/testcase/search', testcase.search, name='testcase_search'),
     url(r'^api/qa/testcase/review', testcase.review, name='testcase_review'),
     url(r'^api/qa/testcase/fall',testcase.fall,name="testcase_fall"),
+    url(r'^api/qa/testcase/export',testcase.export,name="testcase_export"),
 
     # test case sutie and cell
     url(r'^api/qa/testsuite/create',testsuite.create,name="testsuite_create"),

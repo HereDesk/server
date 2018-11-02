@@ -990,13 +990,13 @@ def export(request):
     q1.connector = "AND"
 
     try:
-        req = request.GET
+        req = request.GET.dict()
         product_code = req["product_code"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"产品名称不能为空"})
     else:
         q1.children.append(Q(**{"product_code":product_code}))
-    
+    print(req)
     if "release" in req:
         try:
             release = req["release"]
@@ -1122,4 +1122,4 @@ def export(request):
         return JsonResponse({"status":40001,"msg":"导出Excel时，写入文件失败"})
     else:
         workbook.close()
-        return JsonResponse({"status":2000,"filename":filename,"url":"/"+filepath})
+        return JsonResponse({"status":20000,"filename":filename,"url":"/"+filepath})
