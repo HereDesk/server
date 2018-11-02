@@ -128,6 +128,7 @@ urlpatterns = [
     url(r'^api/qa/bug/bug_property',bug.bug_property, name='bug_property'),
     url(r'^api/qa/bug/solution',bug.bug_solution, name='bug_solution'),
     url(r'^api/qa/bug/list',bug.bug_list, name='bug_list'),
+    url(r'^api/qa/bug/export',bug.export,name='export'),
     url(r'^api/qa/bug/search',bug_search.search, name='bug_search'),
     url(r'^api/qa/bug/details',bug.details, name='bug_details'),
     url(r'^api/qa/bug/delete',bug.delete, name='bug_delete'),

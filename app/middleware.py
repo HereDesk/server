@@ -158,8 +158,7 @@ class CheckUserIdentity(MiddlewareMixin):
             if request.META.get("HTTP_COOKIE"):
                 cookie = request.META["HTTP_COOKIE"].split("=")[1]
             
-            token = cookie
-
+            # token = cookie
             if token:
                 pass
             else:
@@ -172,6 +171,7 @@ class CheckUserIdentity(MiddlewareMixin):
                 annotate(Group=F("uid__group__group"),realname=F("uid__realname"),user_status=F("uid__user_status")).\
                 values("token","uid","Group","realname","user_status")[:][0]
         except Exception as e:
+            print(e)
             return JsonResponse({"status": 14402, "msg": "身份令牌无效，请求中止"})
         else:
             if user_data["user_status"] == 2:

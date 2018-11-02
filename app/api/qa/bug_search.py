@@ -181,16 +181,18 @@ def search(request):
         return JsonResponse({"status": 40001, "msg": u"请求缺少必要的值."})
 
     if "release" in req:
-        release = req["release"]
         try:
             release = req["release"]
             if release == "all":
                 del req["release"]
             else:
-                req["version_id"] = Release.objects.get(Q(product_code=product_code) & Q(version=release))
-                del req["release"]
+                release_query = Release.objects.filter(Q(product_code=product_code) & Q(version=release)).values('id')
+                if len(release_query) == 0:
+                    return JsonResponse({"status":40004,"msg":"版本号错误"})
+                else:
+                    q1.children.append(Q(**{"version_id":list(release_query)[0]['id']}))
         except Exception as e:
-            return JsonResponse({"status":40001,"msg":"产品名称或版本号错误"})
+            return JsonResponse({"status":40004,"msg":"产品名称或版本号错误"})
 
     if "status" in req:
         if req["status"] == "all":
