@@ -46,6 +46,7 @@ from app.api.analyze import testcase_analyze
 
 from app.api.system import api
 from app.api.system import page
+from app.api.system import log
 from app.api.support import upload
 
 urlpatterns = [
@@ -80,7 +81,7 @@ urlpatterns = [
     url(r'^api/pm/product_release', product.product_release, name='product_release'),
     # 仅用于缺陷统计
     url(r'^api/pm/new_product_release', product.new_product_release, name='new_product_release'),
-    url(r'^api/pm/product/user_list', product.user_product_list, name='user_product_list'),
+    url(r'^api/pm/product/my_list', product.my_product_list, name='my_product_list'),
     url(r'^api/pm/product/all_list', product.all_product_list, name='all_product_list'),
     url(r'^api/pm/product/create', product.create_product, name='create_product'),
 
@@ -154,6 +155,8 @@ urlpatterns = [
     url(r'^api/system/page/create',page.create,name='page_create'),
     url(r'^api/system/page/list',page.pages_list,name='page_list'),
     url(r'^api/system/page/manage',page.manage,name='page_manage'),
+
+    url(r'^api/system/user_log',log.userlog,name='userlog'),
 
     # page
     url(r'^api/user/pages',pages.pages,name='user_pages'),

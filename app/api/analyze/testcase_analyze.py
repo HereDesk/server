@@ -36,6 +36,11 @@ def my_today(request):
     # tody
     today = time.strftime("%Y-%m-%d", time.localtime())
 
+    try:
+        pcode = request.GET['product_code']
+    except Exception as e:
+        return JsonResponse({"status": 40001, "msg": u"产品不能为空."})
+
     # get user group and user_id
     my_info = get_myinfo(request)
     group = my_info['group']
@@ -43,7 +48,7 @@ def my_today(request):
     my_object = User.objects.get(user_id=uid)
 
     try:
-        create = TestCase.objects.filter(Q(create_time__gte=today) & Q(creator_id=uid)).\
+        create = TestCase.objects.filter(Q(product_code=pcode) & Q(create_time__gte=today) & Q(creator_id=uid)).\
             aggregate(create=Count('create_time'))
     except Exception as e:
         print(e)
