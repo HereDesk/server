@@ -1,4 +1,4 @@
-Django==2.0
+Django==2.1.3
 django-cors-headers==2.1.0
 mysqlclient==1.3.13
 py==1.4.34
@@ -8,3 +8,4 @@ Token==1.8.6
 uWSGI==2.0.15
 Pillow==4.3.0
 requests
+XlsxWriter

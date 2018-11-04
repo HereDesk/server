@@ -49,6 +49,18 @@ class KeywordFilter(models.Model):
         db_table = "t_keyword_filter"
 
 """
+  team
+"""
+class Team(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
+    team_name = models.CharField(u"团队名称",max_length=100)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+
+    class Meta:
+        db_table = "t_team"
+
+"""
   用户组
 """
 class Group(models.Model):
@@ -80,6 +92,7 @@ class User(models.Model):
     password = models.CharField(u"Password",max_length=200,blank=True,null=True,default=None)
     mobile = models.CharField(u"手机号", max_length=11, null=True, blank=True, default=None)
     user_status = models.IntegerField(u"用户状态",choices=user_status)
+    team_id = models.ForeignKey(Team,to_field="id",on_delete=models.CASCADE,null=True,default=None,db_column="team_id")
     group = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="group")
     realname = models.CharField(u"昵称",max_length=50,null=True,blank=True,default=None)
     position = models.CharField(u"职位",max_length=50,null=True,blank=True,default=None)
