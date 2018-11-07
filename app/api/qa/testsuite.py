@@ -37,7 +37,7 @@ testcase stuie add
 """
 @csrf_exempt
 @require_http_methods(["POST"])
-def create(request):
+def testsuite_create(request):
 	try:
 		req = json.loads(request.body)
 		product_code = req["product_code"]
@@ -170,8 +170,21 @@ def testsutie_cell_add(request):
 			case_data = TestCase.objects.filter(Q(m1_id=m1)).values_list("case_id")[:]
 		if len(case_data) == 0:
 			return JsonResponse({"status":20004,"msg":"该模块下没有测试用例数据"})
-		case_data = [ i[0] for i in case_data]
+		case_data = [ str(i[0]) for i in case_data]
 
+	if len(case_data) == 0:
+		return JsonResponse({"status":20004,"msg":"没有选中用例哦"})
+
+	get_exist_data = TestSuiteCell.objects.filter(Q(suite_id=suite_id)).values_list("case_id")
+
+	if get_exist_data:
+		get_exist_data = [ str(i[0]) for i in get_exist_data ]
+
+	after_case_data = [case for case in case_data if case not in get_exist_data]
+
+	if len(after_case_data) == 0:
+		return JsonResponse({"status":20004,"msg":"已存在，请选择其它用例"})
+		
 	try:
 		creator_obj = get_user_object(request)
 		suite_obj = TestSuite.objects.get(suite_id=suite_id)
@@ -180,16 +193,12 @@ def testsutie_cell_add(request):
 				case_id = TestCase.objects.get(case_id=i),
 				suite_id = suite_obj,
 				creator_id = creator_obj)
-				for i in case_data ]
-			print(data)
+				for i in after_case_data ]
 		except Exception as e:
-			print(e)
 			return JsonResponse({"status":20004,"msg":"用例ID无效"})
 		else:
-			print(data)
 			TestSuiteCell.objects.bulk_create(data)
 	except Exception as e:
-		print(e)
 		return JsonResponse({"status":20004,"msg":"保存失败，请联系管理员"})
 	else:
 		return JsonResponse({"status":20000,"msg":"保存成功"})

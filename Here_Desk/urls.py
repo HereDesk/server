@@ -118,13 +118,13 @@ urlpatterns = [
     url(r'^api/qa/testcase/export',testcase.export,name="testcase_export"),
 
     # test case sutie and cell
-    url(r'^api/qa/testsuite/create',testsuite.create,name="testsuite_create"),
+    url(r'^api/qa/testsuite/create',testsuite.testsuite_create,name="testsuite_create"),
     url(r'^api/qa/testsuite/list',testsuite.testsuite_list,name="testsuite_list"),
 
     url(r'^api/qa/testsuite/cell/brief_list',testsuite.cell_brief_list,name="cell_brief_list"),
     url(r'^api/qa/testsuite/cell/list',testsuite.testsutie_cell_list,name="testsuite_cell_list"),
     url(r'^api/qa/testsuite/cell/add',testsuite.testsutie_cell_add,name="testsutie_cell_add"),
-    url(r'^api/qa/testsuite/cell/run',testsuite.testsutie_cell_run,name="testsutie_cell_run"),
+    url(r'^api/qa/testsuite/cell/run',testsuite.testsutie_cell_run,name="testsutie_cell_run"), 
 
     # bug
     url(r'^api/qa/bug/bug_property',bug.bug_property, name='bug_property'),
