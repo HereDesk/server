@@ -26,5 +26,6 @@ def userlog(request):
         annotate(
             realname=F("user_id__realname")
         ).\
+        order_by("-id").\
         values("id","ip","flag","realname","create_time","update_time")
     return HttpResponse(get_listing(request.GET, data))
