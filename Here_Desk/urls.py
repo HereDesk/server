@@ -30,6 +30,8 @@ from app.api.user import passwd
 from app.api.user import user
 from app.api.user import pages
 
+from app.api.user import config
+
 from app.api.pm import product
 from app.api.pm import version
 from app.api.pm import members
@@ -60,6 +62,8 @@ urlpatterns = [
     url(r'^api/user/banned', user.banned, name='banned'),
     url(r'^api/user/group', user.group, name='group'),
     url(r'^api/user/add', user.add, name='user_add'),
+
+    url(r'^api/userconfig', config.user, name='userconfig'),
 
     # dashboard 
     url(r'^api/dashboard/data_statistics', dashboard.data_statistics, name='data_statistics'),

@@ -15,7 +15,7 @@ import django.utils.timezone as timezone
 class SystemConfig(models.Model):
     id = models.AutoField(primary_key=True)
     code = models.CharField(u"code",max_length=20)
-    code_value = models.IntegerField(u"code值")
+    code_value = models.CharField(u"code值",max_length=100)
     code_desc = models.CharField(u"描述",max_length=100)
     create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
@@ -119,6 +119,21 @@ class Authentication(models.Model):
 
     class Meta:
         db_table = "t_authentication"
+
+"""
+  user config
+"""
+class UserConfig(models.Model):
+    id = models.AutoField(primary_key=True)
+    code = models.CharField(u"code",max_length=20)
+    code_value = models.CharField(u"code值",max_length=100)
+    code_desc = models.CharField(u"描述",max_length=100)
+    user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id")
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+
+    class Meta:
+        db_table = "t_user_config"
 
 """
   产品表

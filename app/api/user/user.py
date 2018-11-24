@@ -20,7 +20,9 @@ from django.views.decorators.http import require_http_methods
 from app.models import User
 from app.models import Authentication
 from app.models import Group
+
 from app.models import SystemConfig
+from app.models import UserConfig
 
 from app.api.gpd import p_encrypt
 from app.api.gpd import generate_token
@@ -34,8 +36,9 @@ from app.api.auth import _auth
 @csrf_exempt
 @require_http_methods(["GET"])
 def userinfo(request):
-    data = User.objects.filter(user_id=get_uid(request)).values('user_id','realname','group')
-    config = SystemConfig.objects.all().values("code","code_value")
+    uid = get_uid(request)
+    data = User.objects.filter(user_id=uid).values('user_id','realname','group')
+    config = UserConfig.objects.filter(Q(user_id=uid)).values("code","code_value")
     return JsonResponse({"status":20000,"data":data[0],"config":list(config)})
     
 """
