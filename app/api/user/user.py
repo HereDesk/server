@@ -38,8 +38,11 @@ from app.api.auth import _auth
 def userinfo(request):
     uid = get_uid(request)
     data = User.objects.filter(user_id=uid).values('user_id','realname','group')
-    config = UserConfig.objects.filter(Q(user_id=uid)).values("code","code_value")
-    return JsonResponse({"status":20000,"data":data[0],"config":list(config)})
+    query_cfg = UserConfig.objects.filter(Q(user_id=uid)).values("code","code_value")
+    config = {}
+    for i in query_cfg:
+        config.update({i["code"]:i["code_value"]}) 
+    return JsonResponse({"status":20000,"data":data[0],"config":config})
     
 """
   用户列表
