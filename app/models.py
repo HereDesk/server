@@ -461,7 +461,7 @@ class Bug(models.Model):
     isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
     delete_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="delete_id",null=True,related_name="DeleteBy")
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
-    last_Time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
+    last_time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
     case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id",null=True)
     cell_id = models.ForeignKey(TestSuiteCell,to_field="cell_id",on_delete=models.CASCADE,db_column="cell_id",null=True,related_name="suite_cell_id")
     m1_id = models.ForeignKey(ModuleA,to_field="id",on_delete=models.CASCADE,null=True,db_column="m1_id")

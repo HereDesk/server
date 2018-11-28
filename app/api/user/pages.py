@@ -19,7 +19,6 @@ from app.api.auth import get_user_group
 def pages(request):
 
     user_group = get_user_group(request)
-
     try:
         data = PagesPermissions.objects.filter(Q(group=user_group)).\
             annotate(

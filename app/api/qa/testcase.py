@@ -100,7 +100,7 @@ def search(request):
                 creator=F("creator_id__realname")
                 ).\
             values("id","case_id","product_code","status","title","priority",
-                "isChange","isReview","creator","creator_id","create_time")
+                "isChange","isReview","creator","creator_id","create_time","update_time")
     except Exception as e:
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})
@@ -144,7 +144,7 @@ def testcase_list(request):
                 creator=F("creator_id__realname")
                 ).\
             values("id","case_id","product_code","status","title","priority",
-                "isChange","isReview","creator","creator_id","create_time").\
+                "isChange","isReview","creator","creator_id","create_time","update_time").\
             order_by("-create_time")
     except Exception as e:
         return JsonResponse({"status": 20004, "msg": u"查询发生异常错误，请联系管理员."})
@@ -387,6 +387,7 @@ def edit(request):
 
     try:
         change_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        case_obj.isChange = 1
         case_obj.change_time = change_time
         case_obj.changer_id = get_user_object(request)
         case_obj.save()
@@ -479,7 +480,7 @@ def annex_delete(request):
         return JsonResponse({"status":20000,"msg":"附件删除成功"})
 
 """
-  bug export
+  case export
 """
 @require_http_methods(["GET"])
 def export(request):

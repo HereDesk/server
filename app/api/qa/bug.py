@@ -140,9 +140,6 @@ def bug_list(request):
     conditions = Q()
     q1 = Q()
     q1.connector = "AND"
-
-    # set data order
-    order = "-create_time"
     
     try:
         req = request.GET.dict()
@@ -190,7 +187,7 @@ def bug_list(request):
             del req["priority"]
 
     for data in req.items():
-        if "product_code" in data or "priority" in data or "severity" in data:
+        if "product_code" in data or "priority" == data[0] or "severity" in data:
             q1.children.append(Q(**{data[0]: data[1]}))
 
     if "operate" in req:
@@ -207,7 +204,6 @@ def bug_list(request):
             q1.children.append(~Q(**{"status":"Closed"}))
         if operate == "WaitPending":
             my_group = get_user_group(request)
-            print("+++++",my_group)
             if my_group == 'test':
                 q2 = Q()
                 q2.connector = "AND"
@@ -233,8 +229,11 @@ def bug_list(request):
             q2.children.append(Q(**{"status":"Reopen"}))
             q2.children.append(Q(**{"status":"Hang-up"}))
             conditions.add(q2, "AND")
-        if operate == "HighPriority":
-            order = "priority"
+
+    if "order" in req:
+        order = req["order"]
+    else:
+        order = "create_time"
             
     conditions.add(q1, "AND")
 
@@ -243,6 +242,7 @@ def bug_list(request):
             annotate(
                 creator_user=F("creator_id__realname"),
                 assignedTo_user=F("assignedTo_id__realname"),
+                fixed_user=F("fixed_id__realname"),
                 severity_name=F("severity__name"),
                 priority_name=F("priority__name"),
                 status_name = F("status__name"),
@@ -252,7 +252,9 @@ def bug_list(request):
             values("id","product_code","bug_id","title","status","status_name","solution_name",\
             "priority","priority_name","severity","severity_name","solution",\
             "creator_id","creator_user","create_time",\
-            "assignedTo_user","assignedTo_time","fixed_id","fixed_time","closed_id","closed_time")
+            "assignedTo_user","assignedTo_time",
+            "fixed_id","fixed_time","fixed_user",
+            "closed_id","closed_time","last_time")
     except Exception as e:
         print(e)
         return JsonResponse({"status":40004,"msg":"异常错误，请联系管理员"})
@@ -289,7 +291,7 @@ def details(request):
             "priority","priority_name","severity","severity_name","bug_type",\
             "bug_type_name","solution","solution_name","status","status_name",\
             "creator_id","creator_user","create_time","assignedTo_id","assignedTo_user","assignedTo_time",\
-            "fixed_user","fixed_id","fixed_time","closed_user","closed_id","closed_time","case_id")
+            "fixed_user","fixed_id","fixed_time","closed_user","closed_id","closed_time","case_id","last_time")
 
     annex = BugAnnex.objects.filter(Q(bug_id=bug_id) & Q(isDelete=0)).values("url")
     if len(data) == 0:

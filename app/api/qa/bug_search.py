@@ -202,7 +202,14 @@ def search(request):
         else:
             status = req["status"]
             q1.children.append(Q(**{"status":status}))
+
+    if "order" in req:
+        order = req["order"]
+    else:
+        order = "create_time"
+        
     q1.children.append(Q(**{"isDelete":0}))
+
 
     try:
         query.add(q1, "AND")
@@ -216,13 +223,12 @@ def search(request):
                 status_name = F("status__name"),
                 solution_name=F("solution__name")
             ).\
-            order_by("-create_time").\
+            order_by(order).\
             values("id","bug_id","title","status","status_name","solution_name",\
             "priority","priority_name","severity","severity_name","solution",\
             "creator_id","creator_user","create_time",\
-            "assignedTo_user","assignedTo_time","fixed_id","fixed_time","closed_id","closed_time")
+            "assignedTo_user","assignedTo_time","fixed_id","fixed_time","closed_id","closed_time","last_time")
     except Exception as e:
-        print(e)
         return JsonResponse({"status": 40004, "msg": u"异常错误，请联系管理员."})
     else:
         if len(data) == 0:
