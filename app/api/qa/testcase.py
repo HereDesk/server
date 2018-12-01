@@ -55,7 +55,8 @@ def details(request):
                 m1_name=F("m1_id__m1"),
                 m2_name=F("m2_id__m2")
                 ).\
-            values("id","case_id","category","product_code","priority","status","m1_id","m2_id","m1_name","m2_name",
+            values("id","case_id","category","product_code","priority","status",
+                "m1_id","m2_id","m1_name","m2_name",
                 "title","precondition","DataInput","steps","expected_result","remark",
                 "creator_id","changer_id","deleter_id","creator","changer","deleter","faller","faller_id",
                 "create_time","change_time","update_time","delete_time","fall_time")
@@ -64,11 +65,19 @@ def details(request):
             annotate(realname=F("user_id__realname")).values("remark","realname","create_time","result")
 
         annex = TestCaseFiles.objects.filter(Q(case_id=case_id) & Q(isDelete=0)).values("file_path")
+
+        annex_tmp = []
+        for ax in annex:
+            try:
+                ax["suffix"] = str(ax["file_path"]).split('.')[-1]
+            except Exception as e:
+                ax["suffix"] = "unknow"
+            annex_tmp.append(ax)
     except Exception as e:
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status": 20000, "data": list(data)[0],"review":list(review),"annex":list(annex)})
+        return JsonResponse({"status": 20000, "data": list(data)[0],"review":list(review),"annex":list(annex_tmp)})
 
 """
   搜索结果

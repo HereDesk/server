@@ -75,7 +75,11 @@ def bug_log_record(request,userId,bug_id,status):
         msg = "将缺陷挂起"
     
     if status == "edit":
-        msg = "修改了缺陷"
+        del req["bug_id"]
+        if len(req) == 1 and "priority" in req:
+            msg = "修改缺陷优先级为：{0}".format(req["priority"])
+        else:
+            msg = "修改了缺陷"
         remark = ""
     
     try:
@@ -231,9 +235,9 @@ def bug_list(request):
             conditions.add(q2, "AND")
 
     if "order" in req:
-        order = req["order"]
+        order = '-' + req["order"]
     else:
-        order = "create_time"
+        order = "-create_time"
             
     conditions.add(q1, "AND")
 
@@ -294,10 +298,19 @@ def details(request):
             "fixed_user","fixed_id","fixed_time","closed_user","closed_id","closed_time","case_id","last_time")
 
     annex = BugAnnex.objects.filter(Q(bug_id=bug_id) & Q(isDelete=0)).values("url")
+
+    annex_tmp = []
+    for ax in annex:
+        try:
+            ax["suffix"] = str(ax["url"]).split('.')[-1]
+        except Exception as e:
+            ax["suffix"] = "unknow"
+        annex_tmp.append(ax)
+    
     if len(data) == 0:
         return JsonResponse({"status":20004,"msg":"没找到数据"})
     else:
-        return JsonResponse({"status":20000,"data":list(data)[0],"annex":list(annex)})
+        return JsonResponse({"status":20000,"data":list(data)[0],"annex":list(annex_tmp)})
 
 """
  bug delete

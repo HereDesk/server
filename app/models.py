@@ -606,3 +606,17 @@ class PagesPermissions(models.Model):
 
     class Meta:
         db_table = "t_pages_permissions"
+
+"""
+  bug 附件
+"""
+class Files(models.Model):
+    id = models.AutoField(primary_key=True)
+    url = models.CharField(u"路径",max_length=100)
+    file_format = models.CharField(u"文件格式",max_length=100)
+    original_name = models.CharField(u"文件名称",max_length=100)
+    user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,null=True,db_column="user_id")
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+
+    class Meta:
+        db_table = "t_files"
