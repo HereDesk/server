@@ -235,7 +235,7 @@ def bug_list(request):
             conditions.add(q2, "AND")
 
     if "order" in req:
-        order = '-' + req["order"]
+        order = req["order"]
     else:
         order = "-create_time"
             

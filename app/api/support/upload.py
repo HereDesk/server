@@ -7,8 +7,16 @@ from django.views.decorators.http import require_http_methods
 from django.core.files.storage import FileSystemStorage
 from django.views.decorators.csrf import csrf_exempt
 
+from app.models import Files
+from app.models import User
+
 @csrf_exempt
 def upload(request):
+
+    allow_suffix_list = ["jpg","png","jpeg","gif","bmp",\
+        "docx","docx","xls","xlsx","ppt","pptx","pdf","txt","log","md","html","json",\
+        "mp4","mp3","mov"]
+
     data_type = request.GET["type"]
     if data_type == "bug":
         path = "media/bug/"
@@ -16,16 +24,34 @@ def upload(request):
         path = "media/testcase/"
     else:
         path = "media/other/"
-    img = request.FILES.get('images')
-    if img:
-        filename = uuid.uuid4().hex
-        try:
-            fileinfo = uuid.uuid4().hex
-        except Exception as e:
-            return JsonResponse({"status":20004,"msg":"服务器出错了，无法保存文件"})
-        with open(path+fileinfo, 'wb+') as destination:
-            for chunk in img.chunks():
+    
+    try:
+        original_filename = str(request.FILES.get('files'))
+        suffix = original_filename.split('.')[-1]
+        if suffix not in allow_suffix_list:
+            return JsonResponse({"status":20004,"msg":"{0}文件不被允许".format(suffix)})
+    except Exception as e:
+        return JsonResponse({"status":20004,"msg":"无法识别文件后缀"})
+
+    file_content = request.FILES.get('files')
+
+    try:
+        filename = str(uuid.uuid4().hex) + "." + suffix
+        with open(path+filename, 'wb+') as destination:
+            for chunk in file_content.chunks():
                 destination.write(chunk)
-        return JsonResponse({"status":20000,"name":"/" + path+ fileinfo})
+    except Exception as e:
+        return JsonResponse({"status":20004,"msg":"文件写入失败"})
+    
+    try:
+        file_url = "/" + path+ filename
+        data = Files(
+            url = file_url,
+            file_format = suffix,
+            original_name = original_filename
+            )
+        data.save()
+    except Exception as e:
+        return JsonResponse({"status":20004,"msg":"文件保存失败"})
     else:
-        return JsonResponse({"status":20004,"msg":"无效文件名"})
+        return JsonResponse({"status":20000,"name":file_url})
