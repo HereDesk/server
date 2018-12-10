@@ -32,10 +32,12 @@ from app.models import BugType
 from app.models import BugStatus
 from app.models import BugPriority
 from app.models import BugSeverity
+from app.models import BugSource
+from app.models import BugSolution
+
 from app.models import Bug
 from app.models import BugAnnex
 from app.models import BugHistory
-from app.models import BugSolution
 from app.models import BugReport
 
 from app.models import TestCase
@@ -78,6 +80,8 @@ def bug_log_record(request,userId,bug_id,status):
         del req["bug_id"]
         if len(req) == 1 and "priority" in req:
             msg = "修改缺陷优先级为：{0}".format(req["priority"])
+        elif len(req) == 1 and "severity" in req:
+            msg = "修改了严重程度."
         else:
             msg = "修改了缺陷"
         remark = ""
@@ -110,6 +114,12 @@ def bug_property(request):
 
         # bug severity
         bug_severity = BugSeverity.objects.all().values("key","name")
+
+        # bug source
+        bug_source = BugSource.objects.all().values("key","name")
+
+        # bug solution
+        bug_solution = BugSolution.objects.all().values("key","name") 
         
     except Exception as e:
         return JsonResponse({"status":40004,"msg":"系统出错了"})
@@ -118,7 +128,9 @@ def bug_property(request):
             "status":20000,
             "bug_type":list(bug_type),
             "bug_priority":list(bug_priority),
-            "bug_severity":list(bug_severity)
+            "bug_severity":list(bug_severity),
+            "bug_source":list(bug_source),
+            "bug_solution": list(bug_solution)
             })
 
 """
@@ -287,13 +299,14 @@ def details(request):
             solution_name=F("solution__name"),
             release=F("version_id__version"),
             bug_type_name=F("bug_type__name"),
+            bug_source_name=F("bug_source__name"),
             m1_name=F("m1_id__m1"),
             m2_name=F("m2_id__m2")
         ).\
         values("id","product_code","release","bug_id","m1_name","m2_name","m1_id","m2_id",\
             "title","steps","reality_result","expected_result","remark",\
             "priority","priority_name","severity","severity_name","bug_type",\
-            "bug_type_name","solution","solution_name","status","status_name",\
+            "bug_type_name","solution","solution_name","status","status_name","bug_source","bug_source_name",\
             "creator_id","creator_user","create_time","assignedTo_id","assignedTo_user","assignedTo_time",\
             "fixed_user","fixed_id","fixed_time","closed_user","closed_id","closed_time","case_id","last_time")
 
@@ -359,11 +372,12 @@ def create(request):
         steps = req["steps"]
         reality_result = req["reality_result"]
         expected_result = req["expected_result"]
-        priority = req["priority"]
-        severity = req["severity"]
         assignedTo = req["assignedTo_id"]
         annex = req["annex"]
+        priority = req["priority"]
+        severity = req["severity"]
         bug_type = req["bug_type"]
+        bug_source = req["bug_source"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"缺少必要的参数"})
 
@@ -373,13 +387,12 @@ def create(request):
             m1_id = ModuleA.objects.get(id=req["module_id"][0])
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-
-        if len(req["module_id"]) == 2:
-            try:
+        try:
+            if len(req["module_id"]) == 2:
                 m2_id = req["module_id"][1]
                 m2_id = ModuleB.objects.get(id=m2_id)
-            except Exception as e:
-                return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+        except Exception as e:
+            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
         
     try:
         if "case_id" in req and req["case_id"]:
@@ -442,6 +455,12 @@ def create(request):
     except Exception as e:
         return JsonResponse({"status":40004,"msg":"缺陷类型无效"})
 
+    # BugType
+    try:
+        bug_source_object = BugSource.objects.get(key=bug_source)
+    except Exception as e:
+        return JsonResponse({"status":40004,"msg":"缺陷来源无效"})
+
     # remark
     if "remark" in req:
         remark = req["remark"]
@@ -455,6 +474,7 @@ def create(request):
             priority = priority_object,
             severity = severity_object,
             bug_type = bug_type_object,
+            bug_source = bug_source_object,
             creator_id = get_user_object(request),
             title = title,
             steps = steps,
@@ -575,6 +595,14 @@ def edit(request):
         except Exception as e:
             print(e)
             return JsonResponse({"status":40004,"msg":"缺陷类型无效"})
+
+    # check BugType
+    if "bug_source" in req:
+        try:
+            bug_obj.bug_source = BugSource.objects.get(key=req["bug_source"])
+        except Exception as e:
+            print(e)
+            return JsonResponse({"status":40004,"msg":"缺陷来源无效"})
 
     if "title" in req:
         bug_obj.title = req["title"]

@@ -6,6 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don"t rename db_table values or field names.
 from django.db import models
+from jsonfield import JSONField
 import uuid
 import django.utils.timezone as timezone
 
@@ -273,12 +274,12 @@ class TestCase(models.Model):
     m2_id = models.ForeignKey(ModuleB,to_field="id",on_delete=models.CASCADE,null=True,db_column="m2_id")
     category = models.CharField(u"用例分类",max_length=20)
     title = models.TextField(u"用例名称",max_length=500)
-    precondition = models.CharField(u"前置条件",max_length=500,null=True,blank=True,default=None)
-    DataInput = models.TextField(u"数据输入",max_length=500,null=True,blank=True,default=None)
-    steps = models.TextField(u"操作步骤",max_length=5000)
-    expected_result = models.TextField(u"预期结果",max_length=500)
+    precondition = models.CharField(u"前置条件",max_length=10000,null=True,blank=True,default=None)
+    DataInput = models.TextField(u"数据输入",max_length=10000,null=True,blank=True,default=None)
+    steps = models.TextField(u"操作步骤",max_length=100000)
+    expected_result = models.TextField(u"预期结果",max_length=10000)
     priority = models.CharField(u"优先级:P1,P2,P3",max_length=10,null=True,blank=True,default=None)
-    remark = models.TextField(u"备注",max_length=1000)
+    remark = models.TextField(u"备注",max_length=10000)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="case_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="case_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="case_deleter")
@@ -405,6 +406,17 @@ class BugPriority(models.Model):
         db_table = "t_bug_priority"
 
 """
+  bug 来源
+"""
+class BugSource(models.Model):
+    id = models.AutoField(primary_key=True)
+    key = models.CharField(u"bug来源",unique=True,max_length=15)
+    name = models.CharField(u"bug来源说明",max_length=20)
+
+    class Meta:
+        db_table = "t_bug_source"
+
+"""
   bug 严重程度
 """
 class BugSeverity(models.Model):
@@ -439,12 +451,13 @@ class Bug(models.Model):
     product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code",related_name="bug_product_code")
     version_id = models.ForeignKey(Release,to_field="id",on_delete=models.CASCADE,db_column="versionId")
     title = models.CharField(u"Bug标题",max_length=100)
-    steps = models.CharField(u"步骤",max_length=1000)
+    steps = models.TextField(u"步骤",max_length=100000)
     reality_result = models.CharField(u"实际结果",max_length=500)
     expected_result = models.CharField(u"预期",max_length=500)
-    remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=1000)
+    remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=10000)
     bug_type = models.ForeignKey(BugType,to_field="key",on_delete=models.CASCADE,null=True,db_column="bug_type",related_name="bug_type_key")
     status = models.ForeignKey(BugStatus,to_field="key",on_delete=models.CASCADE,db_column="status",default="Open")
+    bug_source = models.ForeignKey(BugSource,to_field="key",null=True,on_delete=models.CASCADE,db_column="bug_source")
     priority = models.ForeignKey(BugPriority,to_field="key",on_delete=models.CASCADE,db_column="priority")
     severity = models.ForeignKey(BugSeverity,to_field="key",on_delete=models.CASCADE,db_column="severity")
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="openedBy")
@@ -466,6 +479,7 @@ class Bug(models.Model):
     cell_id = models.ForeignKey(TestSuiteCell,to_field="cell_id",on_delete=models.CASCADE,db_column="cell_id",null=True,related_name="suite_cell_id")
     m1_id = models.ForeignKey(ModuleA,to_field="id",on_delete=models.CASCADE,null=True,db_column="m1_id")
     m2_id = models.ForeignKey(ModuleB,to_field="id",on_delete=models.CASCADE,null=True,db_column="m2_id")
+    environment = models.CharField(u"环境",null=True,blank=True,default=None,max_length=500)
 
     class Meta:
         db_table = "t_bug"
@@ -620,3 +634,17 @@ class Files(models.Model):
 
     class Meta:
         db_table = "t_files"
+
+"""
+  QA config
+"""
+class QaConfig(models.Model):
+    id = models.AutoField(primary_key=True)
+    config_name = models.CharField(u"名称",unique=True,max_length=100)
+    config_value = JSONField()
+    editor_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="editor_id")
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+
+    class Meta:
+        db_table = "t_qa_config"

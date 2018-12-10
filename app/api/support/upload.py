@@ -27,7 +27,7 @@ def upload(request):
     
     try:
         original_filename = str(request.FILES.get('files'))
-        suffix = original_filename.split('.')[-1]
+        suffix = str(original_filename.split('.')[-1]).lower()
         if suffix not in allow_suffix_list:
             return JsonResponse({"status":20004,"msg":"{0}文件不被允许".format(suffix)})
     except Exception as e:

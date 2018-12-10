@@ -37,6 +37,7 @@ from app.api.pm import version
 from app.api.pm import members
 from app.api.pm import module
 
+from app.api.qa import config as qa_config
 from app.api.qa import bug
 from app.api.qa import bug_search
 from app.api.qa import testcase
@@ -108,6 +109,11 @@ urlpatterns = [
     url(r'^api/pm/member/ban',members.product_members_ban, name='product_members_ban'),
     url(r'^api/pm/member/rejoin',members.product_members_rejoin, name='product_members_rejoin'),
 
+
+    # qa config
+    url(r'^api/qa/get_config', qa_config.get_qa_config, name='get_qa_config'),
+    url(r'^api/qa/create_config', qa_config.create_qa_config, name='create_qa_config'),
+
     # 测试用例相关
     url(r'^api/qa/testcase/add', testcase.add, name='add'),
     url(r'^api/qa/testcase/annex_delete',testcase.annex_delete,name='annex_delete'),
@@ -150,6 +156,10 @@ urlpatterns = [
     url(r'^api/qa/bug/report/generate',bug.bug_report,name='bug_report'),
     url(r'^api/qa/bug/report/details',bug.report_details,name='bug_report_details'),
     url(r'^api/qa/bug/annex/delete',bug.annex_delete,name='annex_delete'),
+
+
+
+
 
     # 权限控制
     url(r'^api/system/api/create',api.api_create,name='api_create'),

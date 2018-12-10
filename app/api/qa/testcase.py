@@ -215,15 +215,18 @@ def add(request):
         print(e)
         return JsonResponse({"status":20004,"msg":"产品信息、不能为空哦"})
 
+    m1_id,m2_id = None,None
     if "module_id" in req and len(req["module_id"]):
         try:
             m1_id = ModuleA.objects.get(id=req["module_id"][0])
-            m2_id = ModuleB.objects.get(id=req["module_id"][1])
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-    else:
-        m1_id = None
-        m2_id = None
+        try:
+            if len(req["module_id"]) == 2:
+                m2_id = req["module_id"][1]
+                m2_id = ModuleB.objects.get(id=m2_id)
+        except Exception as e:
+            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
 
     DataInput = ""
     precondition = ""
