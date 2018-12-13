@@ -66,8 +66,8 @@ def create_release(request):
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"未找到此产品名称"})
 
-    if len(release) > 20 | len(release) < 2:
-        return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
+    if len(release) > 20 | len(release) < 3:
+        return JsonResponse({"status":20004,"msg":"版本号的有效长度为3到20位"})
 
     try:
         p = Release(

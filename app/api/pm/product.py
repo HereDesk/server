@@ -65,7 +65,7 @@ def new_product_release(request):
         return JsonResponse({"status":20000,"data":data})
 
 """
-  获取项目与版本（用户）
+  获取当前自己的项目与版本（用户）
 """
 @require_http_methods(["GET"])
 def my_product_list(request):
@@ -126,10 +126,10 @@ def create_product(request):
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"产品名称和编号是必填项哦"})
 
-    if len(product_code) > 20 | len(product_code) < 2:
-        return JsonResponse({"status":20004,"msg":"名称长度的合理范围为1到20位"})
-    if len(product_name) > 20 | len(product_name) < 2:
-        return JsonResponse({"status":20004,"msg":"编号长度的合理范围为1到20位"})
+    if len(product_code) > 20 or len(product_code) < 3:
+        return JsonResponse({"status":20004,"msg":"名称长度的合理范围为3到20位"})
+    if len(product_name) > 20 or len(product_name) < 3:
+        return JsonResponse({"status":20004,"msg":"编号长度的合理范围为3到20位"})
 
     is_check = Product.objects.filter(Q(product_code=product_code) | Q(product_name=product_name)).count()
     if is_check > 0:
