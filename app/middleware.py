@@ -148,21 +148,22 @@ class CheckUserIdentity(MiddlewareMixin):
         # get token
         if request.path == "/api/user/login":
             return None
-        else:
-            token = ""
-            cookie = ""
-            if request.META.get("HTTP_AUTHORIZATION"):
-                token = request.META["HTTP_AUTHORIZATION"].split(" ")[1]
-            if request.META.get("HTTP_AUTHENTICATION"):
-                token = request.META["HTTP_AUTHENTICATION"].split(" ")[1]
-            if request.META.get("HTTP_COOKIE"):
-                cookie = request.META["HTTP_COOKIE"].split("=")[1]
             
-            token = cookie
-            if token:
-                pass
-            else:
-                return JsonResponse({"status":14402,"msg":"token或cookie身份令牌无效，请求中止"})
+        token = ""
+        cookie = ""
+        if request.META.get("HTTP_AUTHORIZATION"):
+            token = request.META["HTTP_AUTHORIZATION"].split(" ")[1]
+        if request.META.get("HTTP_AUTHENTICATION"):
+            token = request.META["HTTP_AUTHENTICATION"].split(" ")[1]
+        if "token" in request.COOKIES:
+            cookie = request.COOKIES["token"]
+        else:
+            return JsonResponse({"status":14402,"msg":"请允许cookie或清除cookie后，重新尝试"})
+
+        if token == cookie:
+            pass
+        else:
+            return JsonResponse({"status":14402,"msg":"身份认证无效，请求中止"})
 
         # check user token 
         try:
