@@ -46,7 +46,7 @@ def get_module(request):
         print(e)
         return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"data":data})
+        return JsonResponse({"status":20000,"product_code":product_code,"data":data})
 
 # 一级模块
 @require_http_methods(["GET"])
@@ -62,7 +62,7 @@ def module_list_a(request):
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"data":list(module)})
+        return JsonResponse({"status":20000,"product_code":product_code,"data":list(module)})
 
 """
   模块：增加
@@ -116,7 +116,7 @@ def module_list_b(request):
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"data":list(module)})
+        return JsonResponse({"status":20000,"product_code":product_code,"data":list(module)})
 
 """
   二级模块：增加
