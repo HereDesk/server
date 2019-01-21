@@ -381,21 +381,19 @@ def edit(request):
     if "category" in req:
         case_obj.category = req["category"]
 
-    if "module_id" in req:
-        if len(req["module_id"]) == 1:
+    if "module_id" in req and req["module_id"]:
+        try:
+            m1_id = ModuleA.objects.get(id=req["module_id"][0])
+            case_obj.m1_id = m1_id
+        except Exception as e:
+            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+            
+        if len(req["module_id"]) == 2:
             try:
-                m1_id = ModuleA.objects.get(id=req["module_id"][0])
+                m2_id = req["module_id"][1]
+                case_obj.m2_id = ModuleB.objects.get(id=m2_id)
             except Exception as e:
                 return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-            else:
-                case_obj.m1_id = m1_id
-        if len(req["module_id"]) == 2:      
-            try:
-                m2_id = ModuleB.objects.get(id=req["module_id"][1])
-            except Exception as e:
-                return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-            else:
-                case_obj.m2_id = m2_id 
 
     try:
         change_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")

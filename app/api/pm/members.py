@@ -28,37 +28,37 @@ curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 def members_list(request):
     
     try:
-        product_code = request.GET['product_code']
+        product_code = request.GET["product_code"]
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "缺少必要的product_code."})
 
-    if 'group' in request.GET:
-        group = request.GET['group']
+    if "group" in request.GET:
+        group = request.GET["group"]
         data = ProductMembers.objects.\
             filter(
                 Q(product_code=product_code) & 
                 Q(member_id__group=group) & 
                 ~Q(member_id__realname__icontains=u"管理员")).\
-            order_by('-group').\
+            order_by("-group").\
             annotate(
-                realname = F('member_id__realname'),
-                user_id = F('member_id'),
-                group = F('member_id__group'),
-                position=F('member_id__position')).\
-            values('user_id','realname','group','status','join_time','banned_time','position')
+                realname = F("member_id__realname"),
+                user_id = F("member_id"),
+                group = F("member_id__group"),
+                position=F("member_id__position")).\
+            values("user_id","realname","group","status","join_time","banned_time","position")
     else:
         data = ProductMembers.objects.\
             filter(
                 Q(product_code=product_code) & 
                 ~Q(member_id__realname__icontains=u"管理员")
                 ).\
-            order_by('-group').\
+            order_by("-group").\
             annotate(
-                realname = F('member_id__realname'),
-                user_id = F('member_id'),
-                group = F('member_id__group'),
-                position=F('member_id__position')).\
-            values('user_id','realname','group','status','join_time','banned_time','position')
+                realname = F("member_id__realname"),
+                user_id = F("member_id"),
+                group = F("member_id__group"),
+                position=F("member_id__position")).\
+            values("user_id","realname","group","status","join_time","banned_time","position")
 
     
     return JsonResponse({"status": 20000, "product_code":product_code,"data": list(data)})
@@ -72,8 +72,8 @@ def product_members_join(request):
     
     try:
         rep = json.loads(request.body)
-        product_code = rep['product_code']
-        user_id = rep['user_id']
+        product_code = rep["product_code"]
+        user_id = rep["user_id"]
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求参数."})
 
@@ -114,8 +114,8 @@ def product_members_ban(request):
     
     try:
         rep = json.loads(request.body)
-        product_code = rep['product_code']
-        user_id = rep['user_id']
+        product_code = rep["product_code"]
+        user_id = rep["user_id"]
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "缺少必要的请求参数."})
 
@@ -142,8 +142,8 @@ def product_members_rejoin(request):
     
     try:
         rep = json.loads(request.body)
-        product_code = rep['product_code']
-        user_id = rep['user_id']
+        product_code = rep["product_code"]
+        user_id = rep["user_id"]
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求参数."})
 

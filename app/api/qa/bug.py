@@ -169,7 +169,8 @@ def bug_list(request):
             if release == "all":
                 del req["release"]
             else:
-                release_query = Release.objects.filter(Q(product_code=product_code) & Q(version=release)).values('id')
+                release_query = Release.objects.\
+                    filter(Q(product_code=product_code) & Q(version=release)).values('id')
                 if len(release_query) == 0:
                     return JsonResponse({"status":40004,"msg":"版本号错误"})
                 else:
@@ -259,6 +260,7 @@ def bug_list(request):
                 creator_user=F("creator_id__realname"),
                 assignedTo_user=F("assignedTo_id__realname"),
                 fixed_user=F("fixed_id__realname"),
+                last_operation_user=F("last_operation__realname"),
                 severity_name=F("severity__name"),
                 priority_name=F("priority__name"),
                 status_name = F("status__name"),
@@ -270,7 +272,7 @@ def bug_list(request):
             "creator_id","creator_user","create_time",\
             "assignedTo_user","assignedTo_time",
             "fixed_id","fixed_time","fixed_user",
-            "closed_id","closed_time","last_time")
+            "closed_id","closed_time","last_time","last_operation_user")
     except Exception as e:
         print(e)
         return JsonResponse({"status":40004,"msg":"异常错误，请联系管理员"})
@@ -487,7 +489,8 @@ def create(request):
             case_id = case_obj,
             cell_id = cell_obj,
             m1_id = m1_id,
-            m2_id = m2_id
+            m2_id = m2_id,
+            last_operation = get_user_object(request)
         )
         bug.save()
     except Exception as e:
@@ -616,6 +619,7 @@ def edit(request):
         bug_obj.remark = req["remark"]
 
     try:
+        bug_obj.last_operation = get_user_object(request)
         bug_obj.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"缺陷修改失败"})
@@ -703,10 +707,10 @@ def resolve(request):
         return JsonResponse({"status":40004,"msg":"solution无效"})
 
     try:
-        user_obj = get_user_object(request)
+        bug_object.last_operation = get_user_object(request)
         bug_object.solution = is_solution
         bug_object.assignedTo_id = assignedTo_obj
-        bug_object.fixed_id = user_obj
+        bug_object.fixed_id = get_user_object(request)
         bug_object.fixed_time = curremt_time
         bug_object.status = BugStatus.objects.get(key="Fixed")
         bug_object.save()
@@ -717,7 +721,7 @@ def resolve(request):
         Solution_content = BugSolution.objects.filter(key=solution).values_list("name",flat=True)[0]
         msg = "解决了缺陷。解决方案为：{0}".format(Solution_content)
         log = BugHistory(
-            user_id = user_obj,
+            user_id = get_user_object(request),
             bug_id = bug_object,
             desc = msg,
             remark = remark
@@ -757,6 +761,7 @@ def assign(request):
         remark = ""
 
     try:
+        bug_obj.last_operation = get_user_object(request)
         bug_obj.assignedTo_id = assignedTo_obj
         bug_obj.assignedTo_time = curremt_time
         bug_obj.status = BugStatus.objects.get(key="Open")
@@ -814,6 +819,7 @@ def close(request):
         return JsonResponse({"status":40004,"msg":"bug_id无效"})
 
     try:
+        bug_object.last_operation = get_user_object(request)
         bug_object.status = BugStatus.objects.get(key="Closed")
         bug_object.closed_id = get_user_object(request)
         bug_object.closed_time = curremt_time
@@ -855,6 +861,7 @@ def reopen(request):
         return JsonResponse({"status":40004,"msg":"分配的用户不存在"})
 
     try:
+        bug_object.last_operation = get_user_object(request)
         bug_object.status = BugStatus.objects.get(key="Reopen")
         bug_object.assignedTo_id = assignedTo_obj
         bug_object.assignedTo_time = curremt_time
@@ -893,6 +900,7 @@ def hangup(request):
         return JsonResponse({"status":40004,"msg":"bug_id无效"})
 
     try:
+        bug_object.last_operation = get_user_object(request)
         bug_object.status = BugStatus.objects.get(key="Hang-up")
         bug_object.hangUp_id = get_user_object(request)
         bug_object.hangUp_time = curremt_time
@@ -921,6 +929,8 @@ def add_notes(request):
 
     try:
         bug_object = Bug.objects.get(bug_id=bug_id)
+        bug_object.last_operation = get_user_object(request)
+        bug_object.save()
     except Exception as e:
         return JsonResponse({"status":40004,"msg":"bug_id无效"})
 

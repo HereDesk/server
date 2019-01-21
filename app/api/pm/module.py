@@ -26,21 +26,21 @@ curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 @require_http_methods(["GET"])
 def get_module(request):
     try:
-        product_code = request.GET['product_code']
+        product_code = request.GET["product_code"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
 
     try:
         data = []
         module_a = ModuleA.objects.filter(product_code=product_code).\
-            annotate(label=F('m1'),value=F('id')).\
-            values('label','id','value').order_by('-id')
+            annotate(label=F("m1"),value=F("id")).\
+            values("label","id","value").order_by("-id")
         for item in module_a:
-            query = ModuleB.objects.filter(m1_id=item['id']).\
-                annotate(label=F('m2'),value=F('id')).\
-                values('label','id','value').order_by('-id')
+            query = ModuleB.objects.filter(m1_id=item["id"]).\
+                annotate(label=F("m2"),value=F("id")).\
+                values("label","id","value").order_by("-id")
             if len(query) > 0:
-                item['children'] = list(query)
+                item["children"] = list(query)
             data.append(item)
     except Exception as e:
         print(e)
@@ -52,13 +52,13 @@ def get_module(request):
 @require_http_methods(["GET"])
 def module_list_a(request):
     try:
-        product_code = request.GET['product_code']
+        product_code = request.GET["product_code"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
 
     try:
         module = ModuleA.objects.filter(product_code=product_code).\
-            values('product_code','m1','id').order_by('id')
+            values("product_code","m1","id").order_by("id")
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
@@ -73,8 +73,8 @@ def module_add_a(request):
 
     try:
         rep = json.loads(request.body)
-        product_code = rep['product_code']
-        module_name = rep['ModuleA']
+        product_code = rep["product_code"]
+        module_name = rep["ModuleA"]
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"module是必填项哦"})
@@ -106,13 +106,14 @@ def module_add_a(request):
 @require_http_methods(["GET"])
 def module_list_b(request):
     try:
-        module_a_id = request.GET['module_a_id']
+        module_a_id = request.GET["module_a_id"]
+        product_code = rep["product_code"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
 
     try:
         module = ModuleB.objects.filter(Q(m1_id=module_a_id) & Q(isDelete=0)).\
-            values('id','m2').order_by('id')
+            values("id","m2").order_by("id")
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
@@ -127,8 +128,8 @@ def module_add_b(request):
 
     try:
         rep = json.loads(request.body)
-        module_a_id = rep['module_a_id']
-        module_b_name = rep['module_b_name']
+        module_a_id = rep["module_a_id"]
+        module_b_name = rep["module_b_name"]
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"module是必填项哦"})
@@ -163,8 +164,8 @@ def module_edit_b(request):
 
     try:
         rep = json.loads(request.body)
-        m2_id = rep['id']
-        m2_name = rep['m2']
+        m2_id = rep["id"]
+        m2_name = rep["m2"]
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"缺少必填参数"})
@@ -203,7 +204,7 @@ def module_edit_b(request):
 def module_del_b(request):
 
     try:
-        m2_id = request.GET['id']
+        m2_id = request.GET["id"]
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"缺少必填参数"})

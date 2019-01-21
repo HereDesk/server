@@ -106,9 +106,10 @@ def cell_brief_list(request):
 	try:
 		data = TestSuiteCell.objects.filter(Q(suite_id=suite_id)).\
 			annotate(
-                title=F("case_id__title")
+                title=F("case_id__title"),
+                creator=F("creator_id__realname"),
 			).\
-			values("title","case_id","id")
+			values("cell_id","title","case_id","create_time","creator_id","creator")
 	except Exception as e:
 		return JsonResponse({"status":20004,"msg":"查询出错，请联系管理员"})
 	else:

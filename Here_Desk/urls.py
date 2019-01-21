@@ -86,8 +86,8 @@ urlpatterns = [
     url(r'^api/pm/product_release', product.product_release, name='product_release'),
     # 仅用于缺陷统计
     url(r'^api/pm/new_product_release', product.new_product_release, name='new_product_release'),
-    url(r'^api/pm/product/my_list', product.my_product_list, name='my_product_list'),
-    url(r'^api/pm/product/all_list', product.all_product_list, name='all_product_list'),
+    url(r'^api/pm/product/my', product.my_product_info, name='my_product_info'),
+    url(r'^api/pm/product/all_list', product.all_product_info, name='all_product_info'),
     url(r'^api/pm/product/create', product.create_product, name='create_product'),
 
     # module
@@ -156,9 +156,6 @@ urlpatterns = [
     url(r'^api/qa/bug/report/generate',bug.bug_report,name='bug_report'),
     url(r'^api/qa/bug/report/details',bug.report_details,name='bug_report_details'),
     url(r'^api/qa/bug/annex/delete',bug.annex_delete,name='annex_delete'),
-
-
-
 
 
     # 权限控制

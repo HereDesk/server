@@ -14,6 +14,8 @@ def get_token(request):
         token = request.META['HTTP_AUTHORIZATION'].split(" ")[1]
     elif request.META.get('HTTP_AUTHENTICATION'):
         token = request.META['HTTP_AUTHENTICATION'].split(" ")[1]
+    elif "token" in request.COOKIES:
+        token = request.COOKIES["token"]
     return token
 
 """

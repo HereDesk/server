@@ -68,22 +68,36 @@ def new_product_release(request):
   获取当前自己的项目与版本（用户）
 """
 @require_http_methods(["GET"])
-def my_product_list(request):
+def my_product_info(request):
     user_id = get_uid(request)
-    data = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
-        annotate(product_name=F('product_code__product_name'),create_time=F('product_code__create_time')).\
-        values('product_code','product_name').order_by('-create_time')
-    if len(data) == 0:
+    product = ProductMembers.objects.\
+        filter(Q(member_id=user_id) & Q(status=0)).\
+        annotate(
+            product_name=F('product_code__product_name'),
+            create_time=F('product_code__create_time')
+            ).\
+        values('product_code','product_name').\
+        order_by('-create_time')
+    if len(product) == 0:
         return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
     else:
-        return JsonResponse({"status":20000,"data":list(data)})
+        data = []
+        for i in product:
+            data.append({
+                'product_code':i['product_code'],
+                'product_name':i['product_name'],
+                'data':list(Release.objects.\
+                    filter(product_code=i['product_code']).\
+                    values('version').order_by('-create_time'))
+                })
+        return JsonResponse({"status":20000,"data":data})
 
 """
  产品: 仅仅供admin调用
 """
 # @csrf_exempt
 @require_http_methods(["GET"])
-def all_product_list(request):
+def all_product_info(request):
     userinfo = get_myinfo(request)
     if userinfo["identity"] == 0 and userinfo["group"] == "admin":
         try:
