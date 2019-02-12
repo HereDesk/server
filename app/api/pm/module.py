@@ -107,7 +107,7 @@ def module_add_a(request):
 def module_list_b(request):
     try:
         module_a_id = request.GET["module_a_id"]
-        product_code = rep["product_code"]
+        # product_code = rep["product_code"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
 
@@ -117,7 +117,8 @@ def module_list_b(request):
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"product_code":product_code,"data":list(module)})
+        # "product_code":product_code,
+        return JsonResponse({"status":20000,"data":list(module)})
 
 """
   二级模块：增加

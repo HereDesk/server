@@ -247,10 +247,13 @@ def bug_list(request):
             q2.children.append(Q(**{"status":"Hang-up"}))
             conditions.add(q2, "AND")
 
-    if "order" in req:
-        order = req["order"]
+    if "sort" in req and "sort_field" in req:
+        if req["sort"] == '-':
+            sort = req["sort"] + req["sort_field"]
+        else:
+            sort = req["sort_field"]
     else:
-        order = "-create_time"
+        sort = "-create_time"
             
     conditions.add(q1, "AND")
 
@@ -266,7 +269,7 @@ def bug_list(request):
                 status_name = F("status__name"),
                 solution_name=F("solution__name")
             ).\
-            order_by(order).\
+            order_by(sort).\
             values("id","product_code","bug_id","title","status","status_name","solution_name",\
             "priority","priority_name","severity","severity_name","solution",\
             "creator_id","creator_user","create_time",\
@@ -420,7 +423,7 @@ def create(request):
             assignedTo_object = User.objects.get(user_id=assignedTo)
         except Exception as e:
             return JsonResponse({"status":40004,"msg":"指派人不存在"})
-        assignedToDate = curremt_time
+        assignedToDate = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         status = BugStatus.objects.get(key="Open")
     else:
         assignedTo_object = None
@@ -535,7 +538,7 @@ def edit(request):
     if "assignedTo_id" in req:
         try:
             bug_obj.assignedTo_id = User.objects.get(user_id=req["assignedTo_id"])
-            bug_obj.assignedTo_time = curremt_time
+            bug_obj.assignedTo_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         except Exception as e:
             print(e)
             return JsonResponse({"status":40001,"msg":"指派人不存在"})
@@ -711,7 +714,7 @@ def resolve(request):
         bug_object.solution = is_solution
         bug_object.assignedTo_id = assignedTo_obj
         bug_object.fixed_id = get_user_object(request)
-        bug_object.fixed_time = curremt_time
+        bug_object.fixed_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         bug_object.status = BugStatus.objects.get(key="Fixed")
         bug_object.save()
     except Exception as e:
@@ -763,7 +766,7 @@ def assign(request):
     try:
         bug_obj.last_operation = get_user_object(request)
         bug_obj.assignedTo_id = assignedTo_obj
-        bug_obj.assignedTo_time = curremt_time
+        bug_obj.assignedTo_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         bug_obj.status = BugStatus.objects.get(key="Open")
         bug_obj.save()
     except Exception as e:
@@ -822,7 +825,7 @@ def close(request):
         bug_object.last_operation = get_user_object(request)
         bug_object.status = BugStatus.objects.get(key="Closed")
         bug_object.closed_id = get_user_object(request)
-        bug_object.closed_time = curremt_time
+        bug_object.closed_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         bug_object.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"缺陷关闭失败"})
@@ -864,8 +867,10 @@ def reopen(request):
         bug_object.last_operation = get_user_object(request)
         bug_object.status = BugStatus.objects.get(key="Reopen")
         bug_object.assignedTo_id = assignedTo_obj
-        bug_object.assignedTo_time = curremt_time
+        bug_object.assignedTo_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         bug_object.solution = None
+        bug_object.closed_id = None
+        bug_object.closed_time = None
         bug_object.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"重新打开失败"})
@@ -903,7 +908,7 @@ def hangup(request):
         bug_object.last_operation = get_user_object(request)
         bug_object.status = BugStatus.objects.get(key="Hang-up")
         bug_object.hangUp_id = get_user_object(request)
-        bug_object.hangUp_time = curremt_time
+        bug_object.hangUp_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
         bug_object.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"延期操作失败"})
