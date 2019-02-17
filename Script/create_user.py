@@ -36,7 +36,7 @@ try:
 	    port=3306,
 	    user=mysql_user,
 	    passwd=mysql_passwd,
-	    db='here_desk',
+	    db='hdesk',
 	    charset='utf8')
 	cursor = db.cursor(cursor=pymysql.cursors.DictCursor)
 except Exception as e:
@@ -48,13 +48,7 @@ except Exception as e:
 def p_encrypt(passwd,msg):
     return hmac.new(passwd.encode('utf-8'),msg.encode('utf-8'),sha1).hexdigest()
 
-
 curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-team_id = ''.join(str(uuid.uuid4()).split('-'))
-team_sql = "insert into `t_team` ( `id`, `team_name`,`create_time`, `update_time`) \
-    values ( '{0}', '{1}','{2}', '{3}');".format(team_id,team_name,curremt_time,curremt_time)
-
-
 uid = str(uuid.uuid4())    
 suid = ''.join(uid.split('-'))
 token = base64.b64encode(os.urandom(150)).decode('ascii')
@@ -65,19 +59,10 @@ encrypt_passwd = p_encrypt(passwd,email)
 # sql
 user_sql = "insert into `t_user` ( `user_id`, `email`, `password`, `mobile`, `user_status`,\
     `realname`, `position`, `gender`, `avatarUrl`, `province`, `city`, `source`, `create_time`,\
-    `update_time`, `group`,`team_id`,`identity`) values ( '{0}', '{1}', '{2}', null, '1', '超级管理员', null, '1',\
-    null, null, null, null, '{3}', '{4}', 'admin','{5}','{6}');".\
-    format(suid,email,encrypt_passwd,curremt_time,curremt_time,team_id,0)
+    `update_time`,`identity`,`username`) values ( '{0}', '{1}', '{2}', null, '1', '超级管理员', null, '1',\
+    null, null, null, null, '{3}', '{4}','{5}','admin');".\
+    format(suid,email,encrypt_passwd,curremt_time,curremt_time,0)
 token_sql = "insert into `t_authentication` ( `token`, `uid`) values ( '{0}', '{1}');".format(token,suid)
-
-# team
-try:
-  cursor = db.cursor()
-  cursor.execute(team_sql)
-except Exception as e:
-  print(e)
-else:
-  db.commit()
 
 # user
 try:
@@ -89,3 +74,30 @@ except Exception as e:
 else:
   db.commit()
   print('\n ->:Success. New user passwd:',passwd)
+
+# team
+team_id = ''.join(str(uuid.uuid4()).split('-'))
+team_sql = "insert into `t_team` ( `id`, `team_name`,`create_time`, `update_time`, `creator_id`) \
+    values ( '{0}', '{1}','{2}', '{3}','{4}');".format(team_id,team_name,curremt_time,curremt_time,suid)
+
+# team
+try:
+  cursor = db.cursor()
+  cursor.execute(team_sql)
+except Exception as e:
+  print(e)
+else:
+  db.commit()
+
+# team member
+team_members_sql = "insert into `t_team_members` (`status`,`join_time`,`team_id`,`user_id`) \
+    values ('0','{0}', '{1}','{2}');".format(curremt_time,team_id,suid)
+
+# team
+try:
+  cursor = db.cursor()
+  cursor.execute(team_members_sql)
+except Exception as e:
+  print(e)
+else:
+  db.commit()
