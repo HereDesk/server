@@ -8,6 +8,7 @@ from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
+from app.models import Group
 from app.models import Product
 from app.models import Release
 from app.models import ModuleA
@@ -18,7 +19,7 @@ from app.api.auth import get_user_object
 from app.api.auth import get_uid
 from app.api.auth import _auth
 from app.api.auth import get_myinfo
-
+from app.api.auth import is_admin
 """
   获取项目与版本（用户）
 """
@@ -27,7 +28,9 @@ def product_release(request):
     
     user_id = get_uid(request)
     product = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
-        annotate(product_name=F('product_code__product_name'),create_time=F('product_code__create_time')).\
+        annotate(
+            product_name=F('product_code__product_name'),
+            create_time=F('product_code__create_time')).\
         values('product_code','product_name').order_by('-create_time')
     if len(product) == 0:
         return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
@@ -37,30 +40,35 @@ def product_release(request):
             data.append({
                 'product_code':i['product_code'],
                 'product_name':i['product_name'],
-                'data':list(Release.objects.filter(product_code=i['product_code']).values('version').order_by('-create_time'))
+                'data':list(
+                    Release.objects.filter(product_code=i['product_code']).\
+                    values('version').order_by('-create_time')
+                    )
                 })
         return JsonResponse({"status":20000,"data":data})
 
 """
-  获取项目与版本（用户）
+  cascader类型 获取项目与版本（用户）===仅仅用于统计
 """
 @require_http_methods(["GET"])
-def new_product_release(request):
+def product_release_cascader(request):
     user_id = get_uid(request)
-    product = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
-        annotate(product_name=F('product_code__product_name')).\
-        values('product_code','product_name')
+    product = ProductMembers.objects.\
+        filter(Q(member_id=user_id) & Q(status=0)).\
+        annotate(product_code=F('product_id__product_code')).\
+        values('product_code','product_id')
     if len(product) == 0:
         return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
     else:
         data = []
         for i in product:
             data.append({
-                'value':i['product_code'],
-                'label':i['product_name'],
-                'children':list(Release.objects.filter(product_code=i['product_code']).\
-                    annotate(value=F('version'),label=F('version'))
-                    .values('value','label'))
+                'value':i['product_id'],
+                'label':i['product_code'],
+                'children':list(
+                    Release.objects.filter(product_id=i['product_id']).\
+                    annotate(value=F('version'),label=F('version')).\
+                    values('value','label'))
                 })
         return JsonResponse({"status":20000,"data":data})
 
@@ -68,26 +76,34 @@ def new_product_release(request):
   获取当前自己的项目与版本（用户）
 """
 @require_http_methods(["GET"])
-def my_product_info(request):
+def my_product_list(request):
     user_id = get_uid(request)
+    is_admin_role = is_admin(request)
+    print(is_admin_role)
+
     product = ProductMembers.objects.\
         filter(Q(member_id=user_id) & Q(status=0)).\
         annotate(
-            product_name=F('product_code__product_name'),
-            create_time=F('product_code__create_time')
+            product_name=F('product_id__product_name'),
+            product_code=F('product_id__product_code'),
+            create_time=F('product_id__create_time')
             ).\
-        values('product_code','product_name').\
+        values('product_id','product_code','product_name').\
         order_by('-create_time')
     if len(product) == 0:
-        return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
+        if is_admin_role:
+            return JsonResponse({"status":20004,"msg":"没有任何项目,赶快去创建吧"})
+        else:
+            return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
     else:
         data = []
         for i in product:
             data.append({
+                'product_id':i['product_id'],
                 'product_code':i['product_code'],
                 'product_name':i['product_name'],
                 'data':list(Release.objects.\
-                    filter(product_code=i['product_code']).\
+                    filter(product_id=i['product_id']).\
                     values('version').order_by('-create_time'))
                 })
         return JsonResponse({"status":20000,"data":data})
@@ -97,34 +113,48 @@ def my_product_info(request):
 """
 # @csrf_exempt
 @require_http_methods(["GET"])
-def all_product_info(request):
+def all_product_list(request):
     userinfo = get_myinfo(request)
-    if userinfo["identity"] == 0 and userinfo["group"] == "admin":
+    if userinfo["identity"] == 0 and userinfo["username"] == "admin":
         try:
-            data = Product.objects.filter(status=0).\
+            admin_data = Product.objects.filter(status=0).\
                 annotate(creator=F('creator_id__realname')).\
                 order_by('-create_time').\
-                values('product_name','product_code','create_time','creator')
+                values('product_id','product_name','product_code','create_time','creator','creator_id')
+            data = list(admin_data)
+            if data:
+                for index,item in enumerate(data):
+                    if item["creator_id"] == userinfo["uid"]:
+                        data[index]["isCreator"] = True
+                    else:
+                        data[index]["isCreator"] = False
         except Exception as e:
+            print(e)
             return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
         try:
             uid = userinfo["uid"]
-            myself_product = Product.objects.filter(creator_id=uid).\
+            user_data = ProductMembers.objects.\
+                filter(Q(member_id=uid) & Q(status=0)).\
                 annotate(
-                    creator=F('creator_id__realname')
-                ).\
-                values('product_name','product_code','create_time','creator')
-            my_join_product = ProductMembers.objects.filter(Q(member_id=uid) & Q(status=0)).\
-                annotate(
+                    product_id=F('product_code__product_id'),\
                     product_name=F('product_code__product_name'),\
                     create_time=F('product_code__create_time'),
-                    creator=F('product_code__creator_id__realname')).\
-                values('product_code','product_name','create_time','creator')
-            data = list(myself_product) + list(my_join_product)
+                    creator=F('product_code__creator_id__realname'),
+                    creator_id=F('product_code__creator_id')).\
+                values('product_id','product_code','product_name','create_time','creator','creator_id')
+            data = list(user_data)
+            if data:
+                for index,item in enumerate(data):
+                    if uid == item["creator_id"]:
+                        data[index]["isCreator"] = True
+                    else:
+                        data[index]["isCreator"] = False
+
         except Exception as e:
+            print(e)
             return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
-    return JsonResponse({"status":20000,"data":list(data)})
+    return JsonResponse({"status":20000,"identity":userinfo["identity"],"data":list(data)})
 
 """
   产品：create
@@ -145,26 +175,28 @@ def create_product(request):
     if len(product_name) > 20 or len(product_name) < 3:
         return JsonResponse({"status":20004,"msg":"编号长度的合理范围为3到20位"})
 
-    is_check = Product.objects.filter(Q(product_code=product_code) | Q(product_name=product_name)).count()
+    is_check = Product.objects.\
+        filter(Q(product_code=product_code) | Q(product_name=product_name)).\
+        count()
     if is_check > 0:
         return JsonResponse({"status":"20004","msg":"此项目名称已存在哦"})
     try:
-        p = Product(
+        prod = Product(
             product_code = product_code,
             product_name = product_name,
             principal = get_user_object(request),
             creator_id = get_user_object(request)
             )
-        p.save()
+        prod.save()
     except Exception as e:
         print(e)
         return JsonResponse({"status":20004,"msg":"保存失败"})
     else:
         try:
-            pcode_object = Product.objects.get(product_code=product_code)
             member = ProductMembers(
                 member_id = get_user_object(request),
-                product_code = pcode_object,
+                product_id = prod,
+                role = Group.objects.get(group="originator"),
                 status = 0
                 )
             member.save()

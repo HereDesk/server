@@ -27,6 +27,7 @@ from app.api.utils import get_listing
 from app.api.auth import get_user_object
 from app.api.auth import get_user_name
 from app.api.auth import get_uid
+from app.api.auth import is_admin
 
 """
     权限列表
@@ -41,7 +42,9 @@ def pages_list(request):
 
     try:
         tmp_data = []
-        pages_list = Pages.objects.all().values("id","page_name","page_url","flag")
+        pages_list = Pages.objects.all().\
+            values("id","page_name","page_url","flag","desc").\
+            order_by("page_name")
         perm_data = PagesPermissions.objects.filter(Q(group=group)).values("page_id","is_allow")
         for pl in pages_list:
             pl["is_allow"] = 0

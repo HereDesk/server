@@ -13,19 +13,50 @@ from app.models import Pages
 from app.models import PagesPermissions
 
 from app.api.auth import get_user_group
+from app.api.auth import is_admin
+from app.api.auth import get_uid
+
+from app.models import ProductMembers
+
 
 @csrf_exempt
 @require_http_methods(["GET"])
 def pages(request):
 
-    user_group = get_user_group(request)
-    try:
-        data = PagesPermissions.objects.filter(Q(group=user_group)).\
-            annotate(
-                url=F("page_id__page_url")
-            ).\
-            values("url","is_allow")
-    except Exception as e:
-        return JsonResponse({"status": 14444, "msg": u"查询异常错误，请联系管理员."})
+    admin_role = is_admin(request)
+
+    if admin_role:
+        return JsonResponse({"status": 20000, "msg": "该用户拥有所有权限"})
     else:
-        return JsonResponse({"status": 20000, "data": list(data)})
+
+        # in the request, get product_id
+        try:
+            product_id = request.GET["product_id"]
+            print(product_id)
+        except Exception as e:
+            return JsonResponse({"status":40001,"msg":"请求缺少项目ID"})
+
+        try:
+            uid = get_uid(request)
+            user_product_role = None
+            query_user_product_role = ProductMembers.objects.\
+                filter(Q(product_id=product_id) & Q(member_id=uid) & Q(status=0)).\
+                values("role")
+            if len(query_user_product_role) == 0:
+                return JsonResponse({"status":40004,"msg":"没有此项目的访问权限"})
+        except Exception as e:
+            print(e)
+            return JsonResponse({"status":40001,"msg":"异常错误"})
+        else:
+            user_product_role = list(query_user_product_role)[0]["role"]
+
+        try:
+            data = PagesPermissions.objects.filter(Q(group=user_product_role)).\
+                annotate(
+                    url=F("page_id__page_url")
+                ).\
+                values("url","is_allow")
+        except Exception as e:
+            return JsonResponse({"status": 14444, "msg": u"查询异常错误，请联系管理员."})
+        else:
+            return JsonResponse({"status": 20000, "user_product_role":user_product_role,"data": list(data)})

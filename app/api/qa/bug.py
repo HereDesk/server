@@ -52,7 +52,7 @@ from app.api.auth import get_user_group
 
 # get cureent time
 curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-visualtime = time.strftime("%Y%m%d%H%M%S", time.localtime())
+visualtime = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 
 # 日志记录
 def bug_log_record(request,userId,bug_id,status):
@@ -159,7 +159,7 @@ def bug_list(request):
     
     try:
         req = request.GET.dict()
-        product_code = req["product_code"]
+        product_id = req["product_id"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"请求缺少必要的值"})
 
@@ -170,7 +170,7 @@ def bug_list(request):
                 del req["release"]
             else:
                 release_query = Release.objects.\
-                    filter(Q(product_code=product_code) & Q(version=release)).values('id')
+                    filter(Q(product_id=product_id) & Q(version=release)).values('id')
                 if len(release_query) == 0:
                     return JsonResponse({"status":40004,"msg":"版本号错误"})
                 else:
@@ -204,7 +204,7 @@ def bug_list(request):
             del req["priority"]
 
     for data in req.items():
-        if "product_code" in data or "priority" == data[0] or "severity" in data:
+        if "product_id" in data or "priority" == data[0] or "severity" in data:
             q1.children.append(Q(**{data[0]: data[1]}))
 
     if "operate" in req:
@@ -267,15 +267,17 @@ def bug_list(request):
                 severity_name=F("severity__name"),
                 priority_name=F("priority__name"),
                 status_name = F("status__name"),
-                solution_name=F("solution__name")
+                solution_name=F("solution__name"),
+                product_code=F("product_id__product_code")
             ).\
             order_by(sort).\
-            values("id","product_code","bug_id","title","status","status_name","solution_name",\
-            "priority","priority_name","severity","severity_name","solution",\
-            "creator_id","creator_user","create_time",\
-            "assignedTo_user","assignedTo_time",
-            "fixed_id","fixed_time","fixed_user",
-            "closed_id","closed_time","last_time","last_operation_user")
+            values("id","product_id","product_code",
+                "bug_id","title","status","status_name","solution_name",\
+                "priority","priority_name","severity","severity_name","solution",\
+                "creator_id","creator_user","create_time",\
+                "assignedTo_user","assignedTo_time",
+                "fixed_id","fixed_time","fixed_user",
+                "closed_id","closed_time","last_time","last_operation_user")
     except Exception as e:
         print(e)
         return JsonResponse({"status":40004,"msg":"异常错误，请联系管理员"})
@@ -294,6 +296,7 @@ def details(request):
     
     data = Bug.objects.filter(bug_id=bug_id).\
         annotate(
+            product_code=F("product_id__product_code"),
             creator_user=F("creator_id__realname"),
             assignedTo_user=F("assignedTo_id__realname"),
             fixed_user=F("fixed_id__realname"),
@@ -305,10 +308,11 @@ def details(request):
             release=F("version_id__version"),
             bug_type_name=F("bug_type__name"),
             bug_source_name=F("bug_source__name"),
-            m1_name=F("m1_id__m1"),
-            m2_name=F("m2_id__m2")
+            m1_name=F("m1_id__m1_name"),
+            m2_name=F("m2_id__m2_name")
         ).\
-        values("id","product_code","release","bug_id","m1_name","m2_name","m1_id","m2_id",\
+        values("id","product_id","product_code","release","bug_id",\
+            "m1_name","m2_name","m1_id","m2_id",\
             "title","steps","reality_result","expected_result","remark",\
             "priority","priority_name","severity","severity_name","bug_type",\
             "bug_type_name","solution","solution_name","status","status_name","bug_source","bug_source_name",\
@@ -371,7 +375,7 @@ def create(request):
 
     try:
         req = json.loads(request.body)
-        product_code = req["product_code"]
+        product_id = req["product_id"]
         release = req["release"]
         title = req["title"]
         steps = req["steps"]
@@ -389,13 +393,13 @@ def create(request):
     m1_id,m2_id = None,None
     if "module_id" in req and req["module_id"]:
         try:
-            m1_id = ModuleA.objects.get(id=req["module_id"][0])
+            m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
         try:
             if len(req["module_id"]) == 2:
                 m2_id = req["module_id"][1]
-                m2_id = ModuleB.objects.get(id=m2_id)
+                m2_obj = ModuleB.objects.get(m2_id=m2_id)
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
         
@@ -432,13 +436,13 @@ def create(request):
     
     # product_code
     try:
-        product_object = Product.objects.get(product_code=product_code)
+        product_object = Product.objects.get(product_id=product_id)
     except Exception as e:
         return JsonResponse({"status":40004,"msg":"产品名称无效"})
 
     # version_object
     try:
-        version_object = Release.objects.get(Q(product_code=product_code) & Q(version=release))
+        version_object = Release.objects.get(Q(product_id=product_id) & Q(version=release))
     except Exception as e:
         return JsonResponse({"status":40004,"msg":"版本号无效"})
 
@@ -474,7 +478,7 @@ def create(request):
 
     try:
         bug = Bug(
-            product_code = product_object,
+            product_id = product_object,
             version_id = version_object,
             priority = priority_object,
             severity = severity_object,
@@ -491,8 +495,8 @@ def create(request):
             status = status,
             case_id = case_obj,
             cell_id = cell_obj,
-            m1_id = m1_id,
-            m2_id = m2_id,
+            m1_id = m1_obj,
+            m2_id = m2_obj,
             last_operation = get_user_object(request)
         )
         bug.save()
@@ -550,31 +554,31 @@ def edit(request):
     # check product_code
     if "product_code" in req:
         try:
-            bug_obj.product_code = Product.objects.get(product_code=req["product_code"])
+            bug_obj.product_id = Product.objects.get(product_id=req["product_id"])
         except Exception as e:
             print(e)
             return JsonResponse({"status":40004,"msg":"产品名称无效"})
 
     if "module_id" in req and req["module_id"]:
         try:
-            m1_id = ModuleA.objects.get(id=req["module_id"][0])
-            bug_obj.m1_id = m1_id
+            m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
+            bug_obj.m1_id = m1_obj
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
             
         if len(req["module_id"]) == 2:
             try:
-                m2_id = req["module_id"][1]
-                bug_obj.m2_id = ModuleB.objects.get(id=m2_id)
+                m2_obj = ModuleB.objects.get(m2_id=req["module_id"][1])
+                bug_obj.m2_id = m2_obj
             except Exception as e:
                 return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
 
     # check version_object
     if "release" in req:
-        if "product_code" not in req:
+        if "product_id" not in req:
             return JsonResponse({"status":40001,"msg":"当您修改版本信息时，必须提交产品选项"})
         try:
-            bug_obj.version_id = Release.objects.get(Q(product_code=req["product_code"]) & Q(version=req["release"]))
+            bug_obj.version_id = Release.objects.get(Q(product_id=req["product_id"]) & Q(version=req["release"]))
         except Exception as e:
             print(e)
             return JsonResponse({"status":40004,"msg":"版本号无效"})
@@ -963,45 +967,45 @@ def bug_report(request):
     get_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
     try:
         req = request.GET
-        product_code = req["product_code"]
+        product_id = req["product_id"]
         t = req["type"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"缺少必要请求参数"})
     
     # today bug data
     status_data = []
-    create = Bug.objects.filter(Q(create_time__gte=today) & Q(product_code=product_code)).\
+    create = Bug.objects.filter(Q(create_time__gte=today) & Q(product_id=product_id)).\
         aggregate(create=Count("create_time"))
     status_data.append(create)
 
     closed = Bug.objects.\
-        filter(Q(closed_time__gte=today) & Q(status="Closed") & Q(product_code=product_code)).\
+        filter(Q(closed_time__gte=today) & Q(status="Closed") & Q(product_id=product_id)).\
         aggregate(closed=Count("closed_time"))
     status_data.append(closed)
     
     fixed = Bug.objects.\
-        filter(Q(fixed_time__gte=today) & Q(status="Fixed") & Q(product_code=product_code)).\
+        filter(Q(fixed_time__gte=today) & Q(status="Fixed") & Q(product_id=product_id)).\
         aggregate(hangUp=Count("fixed_time"))
     status_data.append(fixed)
 
     hangUp = Bug.objects.\
-        filter(Q(hangUp_time__gte=today) & Q(status="HangUp") & Q(product_code=product_code)).\
+        filter(Q(hangUp_time__gte=today) & Q(status="HangUp") & Q(product_id=product_id)).\
         aggregate(hangUp=Count("hangUp_time"))
     status_data.append(hangUp)
 
     # surplus no fixed bug
     surplus_bug = Bug.objects.\
-        filter(Q(product_code=product_code) & ~Q(status="Closed") & ~Q(status="Fixed")).\
+        filter(Q(product_id=product_id) & ~Q(status="Closed") & ~Q(status="Fixed")).\
         annotate(name = F("severity__name")).\
         values("name").annotate(value=Count("id")).order_by("-value")
 
     # 致命一级bug
-    fatal_bug = Bug.objects.filter(Q(product_code=product_code) & Q(severity="Fatal")).order_by("id").\
+    fatal_bug = Bug.objects.filter(Q(product_id=product_id) & Q(severity="Fatal")).order_by("id").\
         values("id","title")
 
     today_data = {
         "datetime": get_time,
-        "product_code":product_code,
+        "product_id":product_id,
         "status_data":status_data,
         "surplus_bug":list(surplus_bug),
         "fatal_bug":list(fatal_bug)
@@ -1049,11 +1053,11 @@ def export(request):
 
     try:
         req = request.GET.dict()
-        product_code = req["product_code"]
+        product_id = req["product_id"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"产品名称不能为空"})
     else:
-        q1.children.append(Q(**{"product_code":product_code}))
+        q1.children.append(Q(**{"product_id":product_id}))
     print(req)
     if "release" in req:
         try:
@@ -1061,7 +1065,9 @@ def export(request):
             if release == "all":
                 del req["release"]
             else:
-                release_query = Release.objects.filter(Q(product_code=product_code) & Q(version=release)).values('id')
+                release_query = Release.objects.\
+                    filter(Q(product_id=product_id) & Q(version=release)).\
+                    values('id')
                 if len(release_query) == 0:
                     return JsonResponse({"status":40004,"msg":"版本号错误"})
                 else:
@@ -1081,6 +1087,7 @@ def export(request):
 
     bug_data = Bug.objects.filter(q1).\
         annotate(
+                product_code=F("product_id__product_code"),
                 creator_user=F("creator_id__realname"),
                 assignedTo_user=F("assignedTo_id__realname"),
                 fixed_user=F("fixed_id__realname"),
@@ -1090,8 +1097,8 @@ def export(request):
                 solution_name=F("solution__name"),
                 release=F("version_id__version"),
                 bug_type_name=F("bug_type__name"),
-                m1_name=F("m1_id__m1"),
-                m2_name=F("m2_id__m2")
+                m1_name=F("m1_id__m1_name"),
+                m2_name=F("m2_id__m2_name")
             ).\
         order_by("-id").\
         values_list("id","product_code","release","m1_name","title","status_name",
@@ -1116,14 +1123,14 @@ def export(request):
         table_data.append(temp)
     
     try:
-        filename = 'Bug_{0}_{1}.xlsx'.format(product_code,visualtime)
+        filename = 'Bug_{0}.xlsx'.format(visualtime)
         filepath = 'media/export/' + filename
         workbook = xlsxwriter.Workbook(filepath)
         worksheet = workbook.add_worksheet('Bug')
 
         # 工作表头部
-        header_name = ['id','产品','版本','模块','标题','状态','优先级','严重程度',
-            '解决方案','创建人','创建时间','指派给谁','指派时间','解决者','修复时间','关闭者','关闭时间','缺陷类型']
+        header_name = ['id','产品','版本','模块','标题','状态','优先级','严重程度','缺陷类型',
+            '解决方案','创建人','创建时间','指派给谁','指派时间','解决者','修复时间','关闭者','关闭时间']
         cell_head = 'A1:{0}1'.format(string.ascii_uppercase[field_length])
 
         cell_head_format = workbook.add_format({

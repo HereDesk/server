@@ -50,16 +50,17 @@ class KeywordFilter(models.Model):
         db_table = "t_keyword_filter"
 
 """
-  team
+  keyword filter
 """
-class Team(models.Model):
-    id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
-    team_name = models.CharField(u"团队名称",max_length=100)
-    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+class UserPosition(models.Model):
+    id = models.AutoField(primary_key=True)
+    key = models.CharField(u"职业",max_length=30)
+    name = models.CharField(u"职业",max_length=30)
+    create_time = models.DateTimeField(auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_team"
+        db_table = "t_user_position"
 
 """
   用户组
@@ -93,8 +94,6 @@ class User(models.Model):
     password = models.CharField(u"Password",max_length=200,blank=True,null=True,default=None)
     mobile = models.CharField(u"手机号", max_length=11, null=True, blank=True, default=None)
     user_status = models.IntegerField(u"用户状态",choices=user_status)
-    team_id = models.ForeignKey(Team,to_field="id",on_delete=models.CASCADE,null=True,default=None,db_column="team_id")
-    group = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="group")
     realname = models.CharField(u"昵称",max_length=50,null=True,blank=True,default=None)
     position = models.CharField(u"职位",max_length=50,null=True,blank=True,default=None)
     gender = models.IntegerField(u"性别",help_text="性别 0：未知、1：男、2：女",default="0")
@@ -109,6 +108,37 @@ class User(models.Model):
     class Meta:
         unique_together = ("email", "realname")
         db_table = "t_user"
+
+"""
+  team
+"""
+class Team(models.Model):
+    id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
+    team_name = models.CharField(u"团队名称",max_length=100)
+    creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id")
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+
+    class Meta:
+        db_table = "t_team"
+
+"""
+  team成员
+"""
+class TeamMembers(models.Model):
+    status = (
+        ("0", u"启用"),
+        ("1", u"禁用"),
+    )
+    id = models.AutoField(primary_key=True)
+    team_id = models.ForeignKey(Team,to_field="id",on_delete=models.CASCADE,null=True,default=None,db_column="team_id")
+    user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id")
+    status = models.IntegerField(u"状态",choices=status,default=0)
+    join_time = models.DateTimeField(u"创建时间",auto_now_add=True)
+    banned_time = models.DateTimeField(u"禁止时间",null=True,blank=True,default=None)
+    
+    class Meta:
+        db_table = "t_team_members"
 
 """
  token
@@ -140,13 +170,19 @@ class UserConfig(models.Model):
   产品表
 """
 class Product(models.Model):
+    isChange = (
+        ("0", u"否"),
+        ("1", u"是"),
+    )
     id = models.AutoField(primary_key=True)
+    product_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
     product_name = models.CharField(u"产品名称",max_length=50)
-    product_code = models.CharField(u"产品编号",unique=True,max_length=20)
+    product_code = models.CharField(u"产品编号或简称",unique=True,max_length=20)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id")
     status = models.IntegerField(u"状态", default=0)
     principal = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="principal",related_name="principal")
     remark = models.CharField(u"备忘",max_length=100,null=True,blank=True,default=None)
+    isChange = models.IntegerField(u"是否变更",choices=isChange,default=0)
     start_time = models.DateTimeField(u"开始日期",null=True,blank=True,default=None)
     end_time = models.DateTimeField(u"结束日期",null=True,blank=True,default=None)
     create_time = models.DateTimeField(u"创建时间",auto_now_add=True)
@@ -164,8 +200,9 @@ class ProductMembers(models.Model):
         ("1", u"禁用"),
     )
     id = models.AutoField(primary_key=True)
-    product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code")
+    product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
     member_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="member_id")
+    role = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="role")
     status = models.IntegerField(u"状态",choices=status,default=0)
     join_time = models.DateTimeField(u"创建时间",auto_now_add=True)
     banned_time = models.DateTimeField(u"禁止时间",null=True,blank=True,default=None)
@@ -178,7 +215,7 @@ class ProductMembers(models.Model):
 """
 class Release(models.Model):
     id = models.AutoField(primary_key=True)
-    product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code")
+    product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
     version = models.CharField(u"版本记录",max_length=20)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="release_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="release_changer")
@@ -205,8 +242,9 @@ class ModuleA(models.Model):
         ("1", u"是")
     )
     id = models.AutoField(primary_key=True)
-    product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code")
-    m1 = models.CharField(u"模块名称",max_length=200)
+    m1_id = models.UUIDField(unique=True,default=uuid.uuid4, editable=False)
+    product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
+    m1_name = models.CharField(u"模块名称",max_length=200)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="module_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="module_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="module_deleter")
@@ -231,8 +269,9 @@ class ModuleB(models.Model):
         ("1", u"是")
     )
     id = models.AutoField(primary_key=True)
-    m1_id = models.ForeignKey(ModuleA,to_field="id",on_delete=models.CASCADE,db_column="ModuleA_ID")
-    m2 = models.CharField(u"模块名称",max_length=200)
+    m2_id = models.UUIDField(unique=True,default=uuid.uuid4, editable=False)
+    m1_id = models.ForeignKey(ModuleA,to_field="m1_id",on_delete=models.CASCADE,db_column="m1_id")
+    m2_name = models.CharField(u"模块名称",max_length=200)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="module_b_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="module_b_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="module_b_deleter")
@@ -269,17 +308,17 @@ class TestCase(models.Model):
     )
     id = models.AutoField(primary_key=True)
     case_id = models.UUIDField(default=uuid.uuid4,unique=True, editable=False)
-    product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code")
-    m1_id = models.ForeignKey(ModuleA,to_field="id",on_delete=models.CASCADE,null=True,db_column="m1_id")
-    m2_id = models.ForeignKey(ModuleB,to_field="id",on_delete=models.CASCADE,null=True,db_column="m2_id")
+    product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
+    m1_id = models.ForeignKey(ModuleA,to_field="m1_id",on_delete=models.CASCADE,null=True,db_column="m1_id")
+    m2_id = models.ForeignKey(ModuleB,to_field="m2_id",on_delete=models.CASCADE,null=True,db_column="m2_id")
     category = models.CharField(u"用例分类",max_length=20)
     title = models.TextField(u"用例名称",max_length=500)
     precondition = models.CharField(u"前置条件",max_length=10000,null=True,blank=True,default=None)
     DataInput = models.TextField(u"数据输入",max_length=10000,null=True,blank=True,default=None)
     steps = models.TextField(u"操作步骤",max_length=100000)
-    expected_result = models.TextField(u"预期结果",max_length=10000)
+    expected_result = models.TextField(u"预期结果",max_length=100000)
     priority = models.CharField(u"优先级:P1,P2,P3",max_length=10,null=True,blank=True,default=None)
-    remark = models.TextField(u"备注",max_length=10000)
+    remark = models.TextField(u"备注",max_length=100000)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="case_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="case_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="case_deleter")
@@ -292,7 +331,8 @@ class TestCase(models.Model):
     change_time = models.DateTimeField("变更时间",null=True,blank=True,default=None)
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
-    update_time = models.DateTimeField(auto_now=True)
+    last_time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
+    last_operation = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="last_operation",null=True,related_name="case_last_operation")
 
     class Meta:
         db_table = "t_testcase"
@@ -320,7 +360,7 @@ class TestCaseFiles(models.Model):
 class TestSuite(models.Model):
     id = models.AutoField(primary_key=True)
     suite_id = models.UUIDField(default=uuid.uuid4,unique=True, editable=False)
-    product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code")
+    product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
     suite_name = models.CharField(u"名称",max_length=30)
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id")
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
@@ -367,10 +407,26 @@ class TestCaseReview(models.Model):
     remark = models.CharField(u"评审意见",max_length=2000,null=True,blank=True,default=None)
     user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id")
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_testcase_review"
 
+
+"""
+  testcase history
+"""
+class TestCaseHistory(models.Model):
+    id = models.AutoField(primary_key=True)
+    case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id")
+    user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id",null=True)
+    desc = models.TextField(u"说明",max_length=10000)
+    remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=2000)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+    
+    class Meta:
+        db_table = "t_testcase_history"
 
 """
   bug 类型
@@ -379,6 +435,8 @@ class BugType(models.Model):
     id = models.AutoField(primary_key=True)
     key = models.CharField(u"bug类型",unique=True,max_length=10)
     name = models.CharField(u"bug状态说明",max_length=20,null=True,blank=True,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_bug_type"
@@ -390,6 +448,8 @@ class BugStatus(models.Model):
     id = models.AutoField(primary_key=True)
     key = models.CharField(u"bug状态",unique=True,max_length=15)
     name = models.CharField(u"bug状态说明",max_length=20,null=True,blank=True,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_bug_status"
@@ -400,7 +460,9 @@ class BugStatus(models.Model):
 class BugPriority(models.Model):
     id = models.AutoField(primary_key=True)
     key = models.CharField(u"bug优先级",unique=True,max_length=15)
-    name = models.CharField(u"bug优先级说明",max_length=20)
+    name = models.CharField(u"bug优先级说明",max_length=20,null=True,blank=True,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_bug_priority"
@@ -411,7 +473,9 @@ class BugPriority(models.Model):
 class BugSource(models.Model):
     id = models.AutoField(primary_key=True)
     key = models.CharField(u"bug来源",unique=True,max_length=15)
-    name = models.CharField(u"bug来源说明",max_length=20)
+    name = models.CharField(u"bug来源说明",max_length=20,null=True,blank=True,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_bug_source"
@@ -423,6 +487,8 @@ class BugSeverity(models.Model):
     id = models.AutoField(primary_key=True)
     key = models.CharField(u"bug严重程度",unique=True,max_length=15)
     name = models.CharField(u"bug严重程度说明",max_length=20,null=True,blank=True,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_bug_severity"
@@ -434,6 +500,8 @@ class BugSolution(models.Model):
     id = models.AutoField(primary_key=True)
     key = models.CharField(u"bug修复方案",unique=True,max_length=15)
     name = models.CharField(u"bug严重程度说明",max_length=20,null=True,blank=True,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         db_table = "t_bug_solution"
@@ -448,12 +516,18 @@ class Bug(models.Model):
     )
     id = models.AutoField(primary_key=True)
     bug_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
-    product_code = models.ForeignKey(Product,to_field="product_code",on_delete=models.CASCADE,db_column="product_code",related_name="bug_product_code")
+    product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id",related_name="bug_product_id")
+    m1_id = models.ForeignKey(ModuleA,to_field="m1_id",on_delete=models.CASCADE,null=True,db_column="m1_id")
+    m2_id = models.ForeignKey(ModuleB,to_field="m2_id",on_delete=models.CASCADE,null=True,db_column="m2_id")
     version_id = models.ForeignKey(Release,to_field="id",on_delete=models.CASCADE,db_column="versionId")
+    case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id",null=True)
+    cell_id = models.ForeignKey(TestSuiteCell,to_field="cell_id",on_delete=models.CASCADE,db_column="cell_id",null=True,related_name="suite_cell_id")
+    bug_label = models.CharField(u"自定义标签",null=True,blank=True,default=None,max_length=1000)
+    environment = models.CharField(u"环境",null=True,blank=True,default=None,max_length=500)
     title = models.CharField(u"Bug标题",max_length=100)
     steps = models.TextField(u"步骤",max_length=100000)
-    reality_result = models.CharField(u"实际结果",max_length=500)
-    expected_result = models.CharField(u"预期",max_length=500)
+    reality_result = models.TextField(u"实际结果",max_length=100000)
+    expected_result = models.TextField(u"预期结果",max_length=100000)
     remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=10000)
     bug_type = models.ForeignKey(BugType,to_field="key",on_delete=models.CASCADE,null=True,db_column="bug_type",related_name="bug_type_key")
     status = models.ForeignKey(BugStatus,to_field="key",on_delete=models.CASCADE,db_column="status",default="Open")
@@ -476,11 +550,6 @@ class Bug(models.Model):
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
     last_time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
     last_operation = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="last_operation",null=True,related_name="last_operation")
-    case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id",null=True)
-    cell_id = models.ForeignKey(TestSuiteCell,to_field="cell_id",on_delete=models.CASCADE,db_column="cell_id",null=True,related_name="suite_cell_id")
-    m1_id = models.ForeignKey(ModuleA,to_field="id",on_delete=models.CASCADE,null=True,db_column="m1_id")
-    m2_id = models.ForeignKey(ModuleB,to_field="id",on_delete=models.CASCADE,null=True,db_column="m2_id")
-    environment = models.CharField(u"环境",null=True,blank=True,default=None,max_length=500)
 
     class Meta:
         db_table = "t_bug"
@@ -496,8 +565,8 @@ class BugAnnex(models.Model):
     id = models.AutoField(primary_key=True)
     bug_id = models.ForeignKey(Bug,to_field="bug_id",on_delete=models.CASCADE,db_column="bug_id")
     url = models.CharField(u"路径",max_length=100)
-    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:
         db_table = "t_bug_annex"
@@ -508,8 +577,8 @@ class BugAnnex(models.Model):
 class BugReport(models.Model):
     id = models.AutoField(primary_key=True)
     report_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
-    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     content = models.TextField(max_length=100000)
+    create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:
         db_table = "t_bug_report"
@@ -521,10 +590,11 @@ class BugHistory(models.Model):
     id = models.AutoField(primary_key=True)
     bug_id = models.ForeignKey(Bug,to_field="bug_id",on_delete=models.CASCADE,db_column="bug_id")
     user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id",null=True)
-    desc = models.CharField(u"说明",max_length=1000)
+    desc = models.TextField(u"说明",max_length=10000)
     remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=2000)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
-
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+    
     class Meta:
         db_table = "t_bug_history"
 
@@ -569,6 +639,7 @@ class Api(models.Model):
     api_code = models.CharField(u"权限code",unique=True,max_length=200)
     url = models.CharField(max_length=200)
     flag = models.CharField(u"标记",max_length=200)
+    desc = models.CharField(u"介绍说明",max_length=500,default=None)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:
@@ -600,6 +671,7 @@ class Pages(models.Model):
     page_name = models.CharField(u"页面名称",unique=True,max_length=100)
     page_url = models.CharField(u"页面url",max_length=200,unique=True)
     flag = models.CharField(u"标记",max_length=200)
+    desc = models.CharField(u"介绍说明",max_length=500,default=None)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:

@@ -30,7 +30,7 @@ from app.models import TestCaseReview
 from app.api.utils import get_listing
 from app.api.auth import get_user_object
 
-visualtime = time.strftime("%Y%m%d%H%M%S", time.localtime())
+visualtime = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 
 """
   case详情
@@ -48,18 +48,19 @@ def details(request):
         data = TestCase.objects. \
             filter(Q(case_id=case_id)). \
             annotate(
+                product_code=F("product_id__product_code"),
                 creator=F("creator_id__realname"),
                 changer=F("changer_id__realname"),
                 deleter=F("deleter_id__realname"),
                 faller=F("faller_id__realname"),
-                m1_name=F("m1_id__m1"),
-                m2_name=F("m2_id__m2")
+                m1_name=F("m1_id__m1_name"),
+                m2_name=F("m2_id__m2_name")
                 ).\
-            values("id","case_id","category","product_code","priority","status",
+            values("id","case_id","category","product_id","product_code","priority","status",
                 "m1_id","m2_id","m1_name","m2_name",
                 "title","precondition","DataInput","steps","expected_result","remark",
                 "creator_id","changer_id","deleter_id","creator","changer","deleter","faller","faller_id",
-                "create_time","change_time","update_time","delete_time","fall_time")
+                "create_time","change_time","last_time","delete_time","fall_time")
 
         review = TestCaseReview.objects.filter(Q(case_id=case_id)).\
             annotate(realname=F("user_id__realname")).values("remark","realname","create_time","result")
@@ -88,7 +89,7 @@ def search(request):
 
     try:
         wd = request.GET["wd"]
-        product_code = request.GET["product_code"]
+        product_id = request.GET["product_id"]
     except Exception as e:
          return JsonResponse({"status": 40004, "msg": u"请求参数错误."})
 
@@ -99,7 +100,7 @@ def search(request):
 
     try:
         data = TestCase.objects.\
-            filter(Q(product_code=product_code) &
+            filter(Q(product_id=product_id) &
                 Q(status=status) &
                 Q(isDelete=0) & (
                 Q(title__icontains=wd) | 
@@ -108,8 +109,8 @@ def search(request):
             annotate(
                 creator=F("creator_id__realname")
                 ).\
-            values("id","case_id","product_code","status","title","priority",
-                "isChange","isReview","creator","creator_id","create_time","update_time")
+            values("id","case_id","product_id","status","title","priority",
+                "isChange","isReview","creator","creator_id","create_time","last_time")
     except Exception as e:
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})
@@ -129,8 +130,8 @@ def testcase_list(request):
     q1.connector = "AND"
 
     try:
-        product_code = request.GET["product_code"]
-        q1.children.append(Q(**{"product_code":product_code}))
+        product_id = request.GET["product_id"]
+        q1.children.append(Q(**{"product_id":product_id}))
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求值"})
 
@@ -152,10 +153,12 @@ def testcase_list(request):
             annotate(
                 creator=F("creator_id__realname")
                 ).\
-            values("id","case_id","product_code","status","title","priority",
-                "isChange","isReview","creator","creator_id","create_time","update_time").\
+            values("id","case_id","product_id","status","title","priority",\
+                "isChange","isReview",\
+                "creator","creator_id","create_time","last_time").\
             order_by("-create_time")
     except Exception as e:
+        print(e)
         return JsonResponse({"status": 20004, "msg": u"查询发生异常错误，请联系管理员."})
     else:
         return HttpResponse(get_listing(request.GET,data))
@@ -170,9 +173,8 @@ def testcase_valid_list(request):
     q1.connector = "AND"
 
     try:
-        print()
-        product_code = request.GET["product_code"]
-        q1.children.append(Q(**{"product_code":product_code}))
+        product_id = request.GET["product_id"]
+        q1.children.append(Q(**{"product_id":product_id}))
     except Exception as e:
         print(e)
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求值"})
@@ -203,10 +205,10 @@ def testcase_valid_list(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def add(request):
-    req = json.loads(request.body)
 
     try:
-        product_code = req["product_code"]
+        req = json.loads(request.body)
+        product_id = req["product_id"]
         category = req["category"]
         title = req["title"]
         ExpectedResult = req["ExpectedResult"]
@@ -215,16 +217,16 @@ def add(request):
         print(e)
         return JsonResponse({"status":20004,"msg":"产品信息、不能为空哦"})
 
-    m1_id,m2_id = None,None
+    m1_obj,m2_obj = None,None
     if "module_id" in req and len(req["module_id"]):
         try:
-            m1_id = ModuleA.objects.get(id=req["module_id"][0])
+            m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
         try:
             if len(req["module_id"]) == 2:
                 m2_id = req["module_id"][1]
-                m2_id = ModuleB.objects.get(id=m2_id)
+                m2_obj = ModuleB.objects.get(m2_id=m2_id)
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
 
@@ -256,7 +258,7 @@ def add(request):
 
     try:
         data = TestCase(
-            product_code = Product.objects.get(product_code=product_code),
+            product_id = Product.objects.get(product_id=product_id),
             title = title,
             category = category,
             DataInput = DataInput,
@@ -266,8 +268,8 @@ def add(request):
             remark = remark,
             creator_id = get_user_object(request),
             priority = priority,
-            m1_id = m1_id,
-            m2_id = m2_id
+            m1_id = m1_obj,
+            m2_id = m2_obj
             )
         data.save()
     except Exception as e:
@@ -383,15 +385,15 @@ def edit(request):
 
     if "module_id" in req and req["module_id"]:
         try:
-            m1_id = ModuleA.objects.get(id=req["module_id"][0])
-            case_obj.m1_id = m1_id
+            m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
+            case_obj.m1_id = m1_obj
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
             
         if len(req["module_id"]) == 2:
             try:
-                m2_id = req["module_id"][1]
-                case_obj.m2_id = ModuleB.objects.get(id=m2_id)
+                m2_obj = ModuleB.objects.get(m2_id=req["module_id"][1])
+                case_obj.m2_id = m2_obj
             except Exception as e:
                 return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
 
@@ -500,11 +502,11 @@ def export(request):
 
     try:
         req = request.GET.dict()
-        product_code = req["product_code"]
+        product_id = req["product_id"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"产品名称不能为空"})
     else:
-        q1.children.append(Q(**{"product_code":product_code}))
+        q1.children.append(Q(**{"product_id":product_id}))
 
     if "m1_id" in req:
         m1_id = req["m1_id"]
@@ -515,15 +517,16 @@ def export(request):
 
     test_data = TestCase.objects.filter(q1). \
         annotate(
+            product_code=F("product_id__product_code"),
             creator=F("creator_id__realname"),
             changer=F("changer_id__realname"),
-            m1_name=F("m1_id__m1"),
-            m2_name=F("m2_id__m2")
+            m1_name=F("m1_id__m1_name"),
+            m2_name=F("m2_id__m2_name")
             ).\
         values_list("id","product_code","m1_name","m2_name","precondition",
             "title","steps","expected_result","DataInput","remark",
-            "priority","status","m1_id","m2_id",
-            "creator","changer","create_time","change_time","update_time")[:]
+            "priority","status",
+            "creator","changer","create_time","change_time","last_time")[:]
 
     if len(test_data) == 0:
         return JsonResponse({"status":20004,"msg":"没有查到相关数据,请修改查询条件"})
@@ -538,14 +541,14 @@ def export(request):
         table_data.append(temp)
     
     try:
-        filename = 'Case_{0}_{1}.xlsx'.format(product_code,visualtime)
+        filename = 'Case_{0}.xlsx'.format(visualtime)
         filepath = 'media/export/' + filename
         workbook = xlsxwriter.Workbook(filepath)
         worksheet = workbook.add_worksheet('TestCase')
 
         # 工作表头部
         header_name = ['id','产品','一级模块','二级模块','前置条件','用例标题','步骤','预期结果',
-            '测试数据','备注','优先级','状态','m1_id','m2_id','创建者','修改人','创建时间','修改时间','最后更新时间']
+            '测试数据','备注','优先级','状态','创建者','修改人','创建时间','修改时间','最后更新时间']
         cell_head = 'A1:{0}1'.format(string.ascii_uppercase[field_length])
 
         cell_head_format = workbook.add_format({

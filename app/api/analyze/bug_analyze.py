@@ -41,8 +41,8 @@ from app.api.auth import get_myinfo
 def query(request):
     q = Q()
     try:
-        product_code = request.GET['product_code']
-        q.children.append(Q(**{'product_code':product_code}))
+        product_id = request.GET['product_id']
+        q.children.append(Q(**{'product_id':product_id}))
         qtype = request.GET['type']
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "请求缺少必要的值."})
@@ -50,7 +50,7 @@ def query(request):
     if 'version' in request.GET:
         version = request.GET['version']
         try:
-            Release.objects.get(Q(version=version) & Q(product_code=product_code))
+            Release.objects.get(Q(version=version) & Q(product_id=product_id))
         except Exception as e:
             print(e)
             return JsonResponse({"status": 40001, "msg": "版本号无效"})
@@ -75,7 +75,7 @@ def query(request):
     except Exception as e:
         return JsonResponse({'status':40004,"msg":"服务器开小差了，请联系管理员"})
     else:
-        return JsonResponse({"status": 20000, "product_code": product_code,"data": list(data)})
+        return JsonResponse({"status": 20000, "product_id": product_id,"data": list(data)})
 
 
 # 按日期：新建bug
@@ -87,12 +87,12 @@ def date_create(request):
     query_type_list = ['today','week','month','year','section']
 
     try:
-        product_code = request.GET['product_code']
+        product_id = request.GET['product_id']
         qtype = request.GET['type']
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"产品与类型不能为空."})
     else:
-        q.children.append(Q(**{'product_code':product_code}))
+        q.children.append(Q(**{'product_id':product_id}))
         if qtype not in query_type_list:
             return JsonResponse({"status":40001, "msg": "查询类型无效"})
 
@@ -148,7 +148,7 @@ def date_create(request):
         print(e)
         return JsonResponse({'status':40004,"msg":"服务器开小差了，请联系管理员"})
     else:
-        return JsonResponse({"status": 20000, "product_code": product_code, "type":qtype, "data": list(data)})
+        return JsonResponse({"status": 20000, "product_id": product_id, "type":qtype, "data": list(data)})
 
 # 我今天的
 @require_http_methods(['GET'])
@@ -158,13 +158,14 @@ def my_today(request):
     today = time.strftime("%Y-%m-%d", time.localtime())
 
     try:
-        pcode = request.GET['product_code']
+        pcode = request.GET['product_id']
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"产品不能为空."})
 
     # get user group and user_id
     my_info = get_myinfo(request)
-    group = my_info['group']
+    # group = my_info['group']
+    group = "tester"
     uid = my_info['uid']
     my_object = User.objects.get(user_id=uid)
 
@@ -174,53 +175,53 @@ def my_today(request):
             fixed = Bug.objects.filter(
                     Q(fixed_time__gte=today) & 
                     Q(fixed_id=uid) & 
-                    Q(product_code=pcode)
+                    Q(product_id=pcode)
                 ).\
                 aggregate(fixed=Count('fixed_time'))
             residue = Bug.objects.filter(
                 Q(assignedTo_id=uid) &
                 ~Q(status='Fixed') &
                 ~Q(status='Closed') &
-                Q(product_code=pcode)).\
+                Q(product_id=pcode)).\
                 aggregate(residue=Count('id'))
             create = Bug.objects.filter(
                     Q(create_time__gte=today) & 
-                    Q(product_code=pcode)
+                    Q(product_id=pcode)
                 ).\
                 aggregate(create=Count('create_time'))
             closed = Bug.objects.filter(
                     Q(closed_time__gte=today) &
                     Q(closed_id=uid) &
                     Q(status='Closed') &
-                    Q(product_code=pcode)).\
+                    Q(product_id=pcode)).\
                 aggregate(closed=Count('closed_time'))
             data = dict(create,**closed,**fixed,**residue)
         else:
             fixed = Bug.objects.filter(
                     Q(fixed_time__gte=today) & 
-                    Q(product_code=pcode)
+                    Q(product_id=pcode)
                 ).\
                 aggregate(fixed=Count('fixed_time'))
             residue = Bug.objects.filter(
                     ~Q(status='Fixed') &
                     ~Q(status='Closed') &
-                    Q(product_code=pcode)
+                    Q(product_id=pcode)
                 ).\
                 aggregate(residue=Count('id'))
             create = Bug.objects.filter(
                     Q(create_time__gte=today) & 
-                    Q(product_code=pcode)
+                    Q(product_id=pcode)
                 ).\
                 aggregate(create=Count('create_time'))
             closed = Bug.objects.filter(
                     Q(closed_time__gte=today) & 
                     Q(status='Closed') & 
-                    Q(product_code=pcode)).\
+                    Q(product_id=pcode)).\
                 aggregate(closed=Count('closed_time'))
             hangUp = Bug.objects.filter(
                     Q(hangUp_time__gte=today) & 
                     Q(status='Hang-Up') & 
-                    Q(product_code=pcode)
+                    Q(product_id=pcode)
                 ).\
                 aggregate(hangUp=Count('hangUp_time'))
             data = dict(create,**closed,**hangUp,**fixed,**residue)
@@ -235,15 +236,15 @@ def my_today(request):
 def tester(request):
     q = Q()
     try:
-        product_code = request.GET['product_code']
-        q.children.append(Q(**{'product_code':product_code}))
+        product_id = request.GET['product_id']
+        q.children.append(Q(**{'product_id':product_id}))
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "请求缺少必要的值."})
     
     if 'version' in request.GET:
         version = request.GET['version']
         try:
-            Release.objects.get(Q(version=version) & Q(product_code=product_code))
+            Release.objects.get(Q(version=version) & Q(product_id=product_id))
         except Exception as e:
             return JsonResponse({"status": 40001, "msg": "版本号无效"})
         else:
@@ -256,7 +257,7 @@ def tester(request):
     except Exception as e:
         return JsonResponse({'status':40004,"msg":"服务器开小差了，请联系管理员"})
     else:
-        return JsonResponse({"status":20000, "product_code":product_code,"data": list(data)})
+        return JsonResponse({"status":20000, "product_id":product_id,"data": list(data)})
 
 # 按照开发人员统计
 @csrf_exempt
@@ -265,15 +266,15 @@ def developer(request):
     q1 = Q()
 
     try:
-        product_code = request.GET['product_code']
-        q1.children.append(Q(**{'product_code':product_code}))
+        product_id = request.GET['product_id']
+        q1.children.append(Q(**{'product_id':product_id}))
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "请求缺少必要的值."})
     
     if 'version' in request.GET:
         version = request.GET['version']
         try:
-            Release.objects.get(Q(version=version) & Q(product_code=product_code))
+            Release.objects.get(Q(version=version) & Q(product_id=product_id))
         except Exception as e:
             return JsonResponse({"status": 40001, "msg": "版本号无效"})
         else:
@@ -308,4 +309,4 @@ def developer(request):
         print(e)
         return JsonResponse({'status':40004,"msg":"服务器开小差了，请联系管理员"})
     else:
-        return JsonResponse({"status":20000, "product_code":product_code,"data": all_data})
+        return JsonResponse({"status":20000, "product_id":product_id,"data": all_data})

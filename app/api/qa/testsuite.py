@@ -40,9 +40,9 @@ testcase stuie add
 def testsuite_create(request):
 	try:
 		req = json.loads(request.body)
-		product_code = req["product_code"]
+		product_id = req["product_id"]
 		suite_name = req["suite_name"]
-		p_obj = Product.objects.get(product_code=product_code)
+		product_obj = Product.objects.get(product_id=product_id)
 	except Exception as e:
 		return JsonResponse({"status":40001,"msg":"缺少必要的请求参数"})
 
@@ -52,7 +52,7 @@ def testsuite_create(request):
 	try:
 		suite_obj = TestSuite(
 			suite_name = suite_name,
-			product_code = p_obj,
+			product_id = product_obj,
 			creator_id = get_user_object(request)
 		)
 		suite_obj.save()
@@ -69,14 +69,20 @@ def testsuite_create(request):
 @require_http_methods(["GET"])
 def testsuite_list(request):
 	user_id = get_uid(request)
-	query_data = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
-		annotate(product_name=F('product_code__product_name'),create_time=F('product_code__create_time')).\
-		values_list('product_code').order_by('-create_time')
+	query_data = ProductMembers.objects.\
+		filter(Q(member_id=user_id) & Q(status=0)).\
+		annotate(
+			product_name=F('product_id__product_name'),\
+			create_time=F('product_id__create_time')).\
+		values_list('product_id').\
+		order_by('-create_time')
 	product_list = list(query_data)
-	print(product_list)
 	try:
-		suite_data = TestSuite.objects.filter(product_code__in=product_list).\
-			values("id","product_code","suite_id","suite_name").order_by("-create_time")
+		suite_data = TestSuite.objects.\
+			annotate(product_code=F("product_id__product_code")).\
+			filter(product_id__in=product_list).\
+			values("id","product_id","product_code","suite_id","suite_name").\
+			order_by("-create_time")
 		tmp = []
 		for i in suite_data:
 			i["bug_num"] = Bug.objects.filter(Q(cell_id__suite_id=i["suite_id"])).count()

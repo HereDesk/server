@@ -4,6 +4,23 @@ from django.http import JsonResponse
 from app.models import User
 from app.models import Authentication
 from django.db.models import F
+from django.db.models import Q
+
+"""
+  getusername
+"""
+def is_admin(request):
+    token = get_token(request)
+    user = Authentication.objects.\
+        filter(
+            Q(token=token) & 
+            Q(uid__identity=0)).\
+        values_list('uid')
+    print(user)
+    if len(user) == 1:
+        return True
+    else:
+        return False
 
 """
   get token
@@ -25,12 +42,12 @@ def get_myinfo(request):
     token = get_token(request)
     user = Authentication.objects.filter(token=token).\
         annotate(
-            group=F('uid__group'),
+            username=F('uid__username'),
             realname=F('uid__realname'),
             position=F('uid__position'),
             identity=F('uid__identity')
             ).\
-        values('uid','group','realname','position','identity')
+        values('uid','username','realname','position','identity')
     return list(user)[0]
 
 

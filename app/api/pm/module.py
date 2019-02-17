@@ -24,21 +24,21 @@ curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
   模块
 """
 @require_http_methods(["GET"])
-def get_module(request):
+def module_list_all(request):
     try:
-        product_code = request.GET["product_code"]
+        product_id = request.GET["product_id"]
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
+        return JsonResponse({"status":40001,"msg":"product_id不能为空哦"})
 
     try:
         data = []
-        module_a = ModuleA.objects.filter(product_code=product_code).\
-            annotate(label=F("m1"),value=F("id")).\
-            values("label","id","value").order_by("-id")
+        module_a = ModuleA.objects.filter(product_id=product_id).\
+            annotate(label=F("m1_name"),value=F("m1_id")).\
+            values("label","m1_id","value").order_by("-id")
         for item in module_a:
-            query = ModuleB.objects.filter(m1_id=item["id"]).\
-                annotate(label=F("m2"),value=F("id")).\
-                values("label","id","value").order_by("-id")
+            query = ModuleB.objects.filter(m1_id=item["m1_id"]).\
+                annotate(label=F("m2_name"),value=F("m2_id")).\
+                values("label","m2_id","value").order_by("-id")
             if len(query) > 0:
                 item["children"] = list(query)
             data.append(item)
@@ -46,23 +46,23 @@ def get_module(request):
         print(e)
         return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"product_code":product_code,"data":data})
+        return JsonResponse({"status":20000,"product_id":product_id,"data":data})
 
 # 一级模块
 @require_http_methods(["GET"])
 def module_list_a(request):
     try:
-        product_code = request.GET["product_code"]
+        product_id = request.GET["product_id"]
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
+        return JsonResponse({"status":40001,"msg":"product_id不能为空哦"})
 
     try:
-        module = ModuleA.objects.filter(product_code=product_code).\
-            values("product_code","m1","id").order_by("id")
+        module = ModuleA.objects.filter(product_id=product_id).\
+            values("m1_name","m1_id").order_by("id")
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"product_code":product_code,"data":list(module)})
+        return JsonResponse({"status":20000,"product_id":product_id,"data":list(module)})
 
 """
   模块：增加
@@ -73,51 +73,53 @@ def module_add_a(request):
 
     try:
         rep = json.loads(request.body)
-        product_code = rep["product_code"]
-        module_name = rep["ModuleA"]
+        product_id = rep["product_id"]
+        m1_name = rep["m1_name"]
     except Exception as e:
         print(e)
-        return JsonResponse({"status":40001,"msg":"module是必填项哦"})
+        return JsonResponse({"status":40001,"msg":"product_id、module是必填项哦"})
     else:
-        if len(module_name) > 20:
+        if len(m1_name) > 20:
             return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
 
-    n = ModuleA.objects.filter(Q(m1=module_name) & Q(product_code=product_code)).count()
+    n = ModuleA.objects.filter(Q(m1_name=m1_name) & Q(product_id=product_id)).count()
     if n > 0:
         return JsonResponse({"status":20004,"msg":"名称已存在，请勿重复添加"})
 
     try:
         # 保存module
-        pcode = Product.objects.get(product_code=product_code)
+        product_obj = Product.objects.get(product_id=product_id)
         m = ModuleA(
-            product_code=pcode,
-            m1=module_name,
+            product_id=product_obj,
+            m1_name=m1_name,
             creator_id=get_user_object(request)
             )
         m.save()
     except Exception as e:
         print(e)
-        return JsonResponse({"status":20004,"msg":"保存失败"})
+        return JsonResponse({"status":20004,"msg":"一级模块保存失败"})
     else:
-        return JsonResponse({"status":20000,"msg":"保存成功"})
+        return JsonResponse({"status":20000,"msg":"一级模块保存成功"})
 
 
 # 二级模块
 @require_http_methods(["GET"])
 def module_list_b(request):
     try:
-        module_a_id = request.GET["module_a_id"]
-        # product_code = rep["product_code"]
+        req = request.GET
+        m1_id = req["m1_id"]
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"product_code不能为空哦"})
+        print(e)
+        return JsonResponse({"status":40001,"msg":"m1_id不能为空哦"})
 
     try:
-        module = ModuleB.objects.filter(Q(m1_id=module_a_id) & Q(isDelete=0)).\
-            values("id","m2").order_by("id")
+        module = ModuleB.objects.\
+            filter(Q(m1_id=m1_id) & Q(isDelete=0)).\
+            values("id","m2_name").\
+            order_by("id")
     except Exception as e:
         return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
     else:
-        # "product_code":product_code,
         return JsonResponse({"status":20000,"data":list(module)})
 
 """
@@ -129,24 +131,24 @@ def module_add_b(request):
 
     try:
         rep = json.loads(request.body)
-        module_a_id = rep["module_a_id"]
-        module_b_name = rep["module_b_name"]
+        m1_id = rep["m1_id"]
+        m2_name = rep["m2_name"]
     except Exception as e:
         print(e)
-        return JsonResponse({"status":40001,"msg":"module是必填项哦"})
-    else:
-        if len(module_b_name) > 20:
-            return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
+        return JsonResponse({"status":40001,"msg":"module信息是必填项哦"})
 
-    n = ModuleB.objects.filter(Q(m1_id=module_a_id) & Q(m2=module_b_name)).count()
+    if len(m2_name) > 20:
+        return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
+
+    n = ModuleB.objects.filter(Q(m1_id=m1_id) & Q(m2_name=m2_name)).count()
     if n > 0:
         return JsonResponse({"status":20004,"msg":"此名称已存在，请勿重复添加"})
 
     try:
         # 保存module
         m = ModuleB(
-            m1_id=ModuleA.objects.get(id=module_a_id),
-            m2=module_b_name,
+            m1_id=ModuleA.objects.get(m1_id=m1_id),
+            m2_name=m2_name,
             creator_id=get_user_object(request)
             )
         m.save()
@@ -165,8 +167,8 @@ def module_edit_b(request):
 
     try:
         rep = json.loads(request.body)
-        m2_id = rep["id"]
-        m2_name = rep["m2"]
+        m2_id = rep["m2_id"]
+        m2_name = rep["m2_name"]
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"缺少必填参数"})
@@ -179,22 +181,23 @@ def module_edit_b(request):
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"该条记录不存在"})
 
-    n = ModuleB.objects.filter(Q(id=m2_id) & Q(m2=m2_name)).count()
-    if n > 0:
-        return JsonResponse({"status":20004,"msg":"此名称已存在，请勿重复添加"})
+    query_data = ModuleB.objects.filter(Q(id=m2_id) & Q(m2_name=m2_name)).values("m2_name")
+    if len(query_data) > 0:
+        if list(query_data)[0]["m2_name"] == m2_name:
+            return JsonResponse({"status":20004,"msg":"此二级模块名称已存在"})
 
     try:
         # 保存module
-        m2_obj.m2=m2_name
+        m2_obj.m2_name=m2_name
         m2_obj.isChange = 1
         m2_obj.changer_id = get_user_object(request)
         m2_obj.change_time = curremt_time
         m2_obj.save()
     except Exception as e:
         print(e)
-        return JsonResponse({"status":20004,"msg":"修改失败"})
+        return JsonResponse({"status":20004,"msg":"二级模块修改失败"})
     else:
-        return JsonResponse({"status":20000,"msg":"修改成功"})
+        return JsonResponse({"status":20000,"msg":"二级模块修改成功"})
 
 
 """

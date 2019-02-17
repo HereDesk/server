@@ -31,7 +31,7 @@ from app.api.auth import get_user_group
 def data_statistics(request):
     uid = get_uid(request)
     try:
-        product_code = request.GET['product_code']
+        product_id = request.GET['product_id']
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"产品不能为空哦"})
 
@@ -50,14 +50,14 @@ def data_statistics(request):
             WaitPending = Bug.objects.\
                 filter(
                     Q(assignedTo_id=uid) & 
-                    Q(product_code=product_code) & 
+                    Q(product_id=product_id) & 
                     ~Q(status='closed')
                 ).count()
         else:
             WaitPending = Bug.objects.\
                 filter(
                     Q(assignedTo_id=uid) & 
-                    Q(product_code=product_code) & 
+                    Q(product_id=product_id) & 
                     (
                         Q(status='Open') | 
                         Q(status='Hang-up') |
@@ -71,7 +71,7 @@ def data_statistics(request):
 
     # 我解决的
     try:
-        data_resolvedByMe = Bug.objects.filter(Q(product_code=product_code) & Q(fixed_id=uid)).count()
+        data_resolvedByMe = Bug.objects.filter(Q(product_id=product_id) & Q(fixed_id=uid)).count()
     except Exception as e:
         data_resolvedByMe = 0
     finally:
@@ -81,7 +81,7 @@ def data_statistics(request):
     try:
         data_not_Fixed = Bug.objects.\
             filter(
-                Q(product_code=product_code) & 
+                Q(product_id=product_id) & 
                 ( 
                     Q(status='Open') | 
                     Q(status='Hang-up') |
@@ -95,7 +95,7 @@ def data_statistics(request):
 
     # 我创建的
     try:
-        data_createdByMe = Bug.objects.filter(Q(product_code=product_code) & Q(creator_id=uid)).count()
+        data_createdByMe = Bug.objects.filter(Q(product_id=product_id) & Q(creator_id=uid)).count()
     except Exception as e:
         data_createdByMe = 0
     finally:
@@ -103,7 +103,7 @@ def data_statistics(request):
 
     # 我关闭的
     try:
-        data_closedByMe = Bug.objects.filter(Q(product_code=product_code) & Q(closed_id=uid)).count()
+        data_closedByMe = Bug.objects.filter(Q(product_id=product_id) & Q(closed_id=uid)).count()
     except Exception as e:
         data_ClosedByMe = 0
     finally:
@@ -111,7 +111,7 @@ def data_statistics(request):
 
     # 所有已解决待关闭
     try:
-        data_Fixed = Bug.objects.filter(Q(product_code=product_code) & Q(status='Fixed')).count()
+        data_Fixed = Bug.objects.filter(Q(product_id=product_id) & Q(status='Fixed')).count()
     except Exception as e:
         data_Fixed = 0
     finally:

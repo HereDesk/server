@@ -84,14 +84,15 @@ urlpatterns = [
 
     # 产品、版本号
     url(r'^api/pm/product_release', product.product_release, name='product_release'),
-    # 仅用于缺陷统计
-    url(r'^api/pm/new_product_release', product.new_product_release, name='new_product_release'),
-    url(r'^api/pm/product/my', product.my_product_info, name='my_product_info'),
-    url(r'^api/pm/product/all_list', product.all_product_info, name='all_product_info'),
+
+    # 项目或产品
+    url(r'^api/pm/product/cascader/my', product.product_release_cascader, name='product_release_cascader'),
+    url(r'^api/pm/product/my', product.my_product_list, name='my_product_info'),
+    url(r'^api/pm/product/all_list', product.all_product_list, name='all_product_info'),
     url(r'^api/pm/product/create', product.create_product, name='create_product'),
 
     # module
-    url(r'^api/pm/get_module', module.get_module, name='get_module'),
+    url(r'^api/pm/module/all/list', module.module_list_all, name='module_list_all'),
     url(r'^api/pm/module/1/list', module.module_list_a, name='module_list_a'),
     url(r'^api/pm/module/1/add', module.module_add_a, name='add_module_a'),
     url(r'^api/pm/module/2/list', module.module_list_b, name='module_list_b'),

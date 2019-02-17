@@ -13,6 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from app.models import User
+from app.models import Group
 from app.models import Authentication
 from app.models import Product
 from app.models import ProductMembers
@@ -28,40 +29,38 @@ curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 def members_list(request):
     
     try:
-        product_code = request.GET["product_code"]
+        product_id = request.GET["product_id"]
     except Exception as e:
-        return JsonResponse({"status": 40001, "msg": "缺少必要的product_code."})
+        return JsonResponse({"status": 40001, "msg": "因请求中缺少项目ID, 请求中止."})
 
-    if "group" in request.GET:
-        group = request.GET["group"]
+    if "role" in request.GET:
+        role = request.GET["role"]
         data = ProductMembers.objects.\
             filter(
-                Q(product_code=product_code) & 
+                Q(product_id=product_id) & 
                 Q(member_id__group=group) & 
                 ~Q(member_id__realname__icontains=u"管理员")).\
-            order_by("-group").\
+            order_by("-role").\
             annotate(
                 realname = F("member_id__realname"),
                 user_id = F("member_id"),
-                group = F("member_id__group"),
-                position=F("member_id__position")).\
-            values("user_id","realname","group","status","join_time","banned_time","position")
+                role_name=F("role__name")).\
+            values("user_id","realname","role_name","status","join_time","banned_time")
     else:
         data = ProductMembers.objects.\
             filter(
-                Q(product_code=product_code) & 
+                Q(product_id=product_id) & 
                 ~Q(member_id__realname__icontains=u"管理员")
                 ).\
-            order_by("-group").\
+            order_by("-role").\
             annotate(
                 realname = F("member_id__realname"),
                 user_id = F("member_id"),
-                group = F("member_id__group"),
-                position=F("member_id__position")).\
-            values("user_id","realname","group","status","join_time","banned_time","position")
+                role_name=F("role__name")).\
+            values("user_id","realname","role_name","status","join_time","banned_time")
 
     
-    return JsonResponse({"status": 20000, "product_code":product_code,"data": list(data)})
+    return JsonResponse({"status": 20000, "product_id":product_id,"data": list(data)})
 
 """
   项目组加入成员
@@ -72,30 +71,37 @@ def product_members_join(request):
     
     try:
         rep = json.loads(request.body)
-        product_code = rep["product_code"]
+        product_id = rep["product_id"]
         user_id = rep["user_id"]
+        role = rep["role"]
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求参数."})
 
     try:
-        pcode_object = Product.objects.get(product_code=product_code)
+        product_object = Product.objects.get(product_id=product_id)
     except Exception as e:
-        return JsonResponse({"status": 20004, "msg": "product_code无效."})
+        return JsonResponse({"status": 20004, "msg": "product_id无效."})
+
+    try:
+        role_object = Group.objects.get(group=role)
+    except Exception as e:
+        return JsonResponse({"status": 20004, "msg": "product_id无效."})
 
     try:
         uid = User.objects.get(user_id=user_id)
     except Exception as e:
         return JsonResponse({"status": 20004, "msg": "user_id无效."})
 
-    is_check = ProductMembers.objects.filter(Q(member_id=user_id) & Q(product_code=product_code))
+    is_check = ProductMembers.objects.filter(Q(member_id=user_id) & Q(product_id=product_id))
     if len(is_check) > 0:
         return JsonResponse({"status": 20004, "msg": "此用户已在项目组，请勿重复添加."})
 
     try:
         data = ProductMembers(
             member_id = uid,
-            product_code = pcode_object,
-            status = 0
+            product_id = product_object,
+            status = 0,
+            role = role_object
             )
         data.save()
     except Exception as e:
@@ -114,13 +120,13 @@ def product_members_ban(request):
     
     try:
         rep = json.loads(request.body)
-        product_code = rep["product_code"]
+        product_id = rep["product_id"]
         user_id = rep["user_id"]
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "缺少必要的请求参数."})
 
     try:
-        u = ProductMembers.objects.get(Q(member_id=user_id) & Q(product_code=product_code))
+        u = ProductMembers.objects.get(Q(member_id=user_id) & Q(product_id=product_id))
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "user_id或product_code无效."})
 
@@ -142,18 +148,19 @@ def product_members_rejoin(request):
     
     try:
         rep = json.loads(request.body)
-        product_code = rep["product_code"]
+        product_id = rep["product_id"]
         user_id = rep["user_id"]
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": "缺少必要的请求参数."})
 
     try:
-        u = ProductMembers.objects.get(Q(member_id=user_id) & Q(product_code=product_code))
+        u = ProductMembers.objects.get(Q(member_id=user_id) & Q(product_id=product_id))
     except Exception as e:
-        return JsonResponse({"status": 20004, "msg": "user_id或product_code无效."})
+        return JsonResponse({"status": 20004, "msg": "user_id或product_cid无效."})
 
     try:
         u.status = 0
+        u.banned_time = None
         u.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"用户重新加入失败"})

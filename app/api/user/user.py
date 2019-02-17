@@ -37,8 +37,12 @@ from app.api.auth import _auth
 @require_http_methods(["GET"])
 def userinfo(request):
     uid = get_uid(request)
-    data = User.objects.filter(user_id=uid).values('user_id','realname','group')
-    query_cfg = UserConfig.objects.filter(Q(user_id=uid)).values("code","code_value")
+    data = User.objects.\
+        filter(user_id=uid).\
+        values('user_id','realname',"username","identity","email")
+    query_cfg = UserConfig.objects.\
+        filter(Q(user_id=uid)).\
+        values("code","code_value")
     config = {}
     for i in query_cfg:
         config.update({i["code"]:i["code_value"]}) 
@@ -49,9 +53,10 @@ def userinfo(request):
 """
 @require_http_methods(["GET"])
 def user_list(request):
-    data = User.objects.filter(~Q(realname="超级管理员")).\
-        annotate(group_name=F('group__name')).\
-        values('user_id','email','realname','create_time','update_time','user_status','group_name','group','position')
+    data = User.objects.\
+        filter(~Q(realname="超级管理员")).\
+        values('user_id','email','identity','realname','user_status','position',\
+            'create_time','update_time')
     return JsonResponse({"status":20000,"data":list(data)})
 
 """
@@ -59,7 +64,9 @@ def user_list(request):
 """
 @require_http_methods(["GET"])
 def group(request):
-    data = Group.objects.all().values('group','name')
+    data = Group.objects.\
+        filter(~Q(group="admin")).\
+        values('group','name')
     return JsonResponse({"status":20000,"data":list(data)})
 
 
@@ -118,13 +125,14 @@ def banned(request):
 @require_http_methods(['POST'])
 def add(request):
 
-    position_list = ['manager','test','android','ios','server','web/H5','pm','design','othter']
+    position_list = [
+        'manager','developer','test','android','ios','server','web/H5','pm','design','other'
+        ]
     try:
         req_info = json.loads(request.body)
         email = req_info["email"]
         password = req_info["password"]
         realname = req_info["realname"]
-        group = req_info["group"]
         position = req_info["position"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"缺少必要的请求值."})
@@ -135,8 +143,6 @@ def add(request):
             return JsonResponse({"status":20004,"msg":"Email的有效长度为6到16位."})
         if len(realname) < 2 or len(realname) > 8:
             return JsonResponse({"status":20004,"msg":"真实姓名的有效长度为2到8位."})
-        if len(group) == 0:
-            return JsonResponse({"status":20004,"msg":"用户组不能为空"})
         if position not in position_list:
             return JsonResponse({"status":20004, "msg":"岗位/职位信息无效"})
 
@@ -149,22 +155,12 @@ def add(request):
         return JsonResponse({"status":40004,"msg":realname + "已被使用"})
 
     try:
-        is_check_group = Group.objects.filter(Q(group=group))
-        if len(is_check_group) == 0:
-            return JsonResponse({"status":20004,"msg":"用户组无效"})
-    except Exception as e:
-        return JsonResponse({"status":40004,"msg":"查询组出错"})
-    else:
-        user_group = Group.objects.get(group=group)
-
-    try:
         encrypt_passwd = p_encrypt(password,email)
         create_user = User(
             password=encrypt_passwd,
             email=email,
             user_status=1,
             realname=realname,
-            group=user_group,
             identity=1,
             position=position)
         create_user.save()

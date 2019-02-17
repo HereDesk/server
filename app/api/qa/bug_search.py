@@ -175,7 +175,6 @@ def handle_advanced_search(req):
     fixed_user_query = Q()
     assignedTo_user_query = Q()
     closed_user_query = Q()
-    print(req)
     if "status_list" in req:
         status_list = req["status_list"]
         if status_list:
@@ -265,14 +264,14 @@ def search(request):
     try:
         req = json.loads(request.body)
         advanced_search = req["isShowAdSearch"]
-        product_code = req["product_code"]
+        product_id = req["product_id"]
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"请求缺少必要的值."})
 
     # check product code
     try:
-        query.children.append(Q(**{"product_code":product_code}))
-        productObject = Product.objects.get(product_code=product_code)
+        query.children.append(Q(**{"product_id":product_id}))
+        productObject = Product.objects.get(product_id=product_id)
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"查询产品异常."})
 
@@ -284,7 +283,7 @@ def search(request):
                 del req["release"]
             else:
                 release_query = Release.objects.\
-                    filter(Q(product_code=product_code) & Q(version=release)).values('id')
+                    filter(Q(product_id=product_id) & Q(version=release)).values('id')
                 if len(release_query) == 0:
                     return JsonResponse({"status":40001,"msg":"版本号错误"})
                 else:

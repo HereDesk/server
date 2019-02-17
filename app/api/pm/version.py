@@ -19,20 +19,27 @@ from app.api.auth import _auth
 @require_http_methods(["GET"])
 def get_release(request):
     try:
-        product_code = request.GET['product_code']
+        product_id = request.GET["product_id"]
     except Exception as e:
-        return JsonResponse({"status":40004,"msg":u"产品编号不能为空."})
+        return JsonResponse({"status":40004,"msg":u"产品ID不能为空."})
 
     try:
-        product = Product.objects.get(product_code=product_code)
+        product_obj = Product.objects.get(product_id=product_id)
     except Exception as e:
-        return JsonResponse({"status":20004,"msg":u"产品编号无效."})
+        return JsonResponse({"status":20004,"msg":u"产品ID无效."})
 
     try:
-        version_data = Release.objects.filter(product_code=product_code).\
-            annotate(user=F('creator_id__realname')).\
-            order_by('-create_time').values('product_code','version','create_time','user')
+        version_data = Release.objects.\
+            filter(product_id=product_id).\
+            annotate(
+                user=F("creator_id__realname"),
+                product_code=F("product_id__product_code"),
+                product_name=F("product_id__product_name")
+                ).\
+            order_by("-create_time").\
+            values("product_id","product_name","product_code","version","create_time","user")
     except Exception as e:
+        print(e)
         return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
         return JsonResponse({"status":20000,"data":list(version_data)})
@@ -47,20 +54,20 @@ def create_release(request):
     rep = json.loads(request.body)
 
     try:
-        product_code = rep['product_code']
-        release = rep['release']
+        product_id = rep["product_id"]
+        release = rep["release"]
     except Exception as e:
-        return JsonResponse({"status":20004,"msg":"产品名称和版本号是必填项哦"})
+        return JsonResponse({"status":20004,"msg":"请求缺少产品ID和版本号名称"})
 
     # 检查产品是否存在
     try:
-        pcode = Product.objects.get(product_code=product_code)
+        product_obj = Product.objects.get(product_id=product_id)
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"未找到此产品名称"})
 
     # 检测版本号是否存在
     try:
-        v = Release.objects.filter(Q(product_code=product_code) & Q(version=release)).count()
+        v = Release.objects.filter(Q(product_id=product_id) & Q(version=release)).count()
         if v > 0:
             return JsonResponse({"status":20004,"msg":"该版本号已存在"})
     except Exception as e:
@@ -71,7 +78,7 @@ def create_release(request):
 
     try:
         p = Release(
-            product_code = pcode,
+            product_id = product_obj,
             version = release,
             creator_id = get_user_object(request)
             )

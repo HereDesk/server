@@ -67,10 +67,11 @@ def login(request):
         if p == q_passwd:
             ut = Authentication.objects.filter(uid=q_uid).\
                 annotate(
-                    group=F('uid__group__group'),
-                    realname=F('uid__realname')
+                    realname=F('uid__realname'),
+                    identity=F('uid__identity'),
+                    username=F('uid__username')
                     ).\
-                values("token","uid","group","realname")
+                values("token","uid","realname","identity","username")
             return JsonResponse({"status": 10000, "msg": u"恭喜您！登录成功", "data": list(ut)[0]})
         else:
             return JsonResponse({"status": 10004, "msg": u"用户名或密码错误。"})
