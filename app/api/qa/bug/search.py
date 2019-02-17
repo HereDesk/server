@@ -14,27 +14,16 @@ from django.db.models import Q
 from django.db.models import F
 from django.db.models import Count
 
-from django.forms.models import model_to_dict
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from app.models import Product
 from app.models import Release
-from app.models import ModuleA
-from app.models import User
 
-from app.models import BugType
-from app.models import BugStatus
-from app.models import BugPriority
-from app.models import BugSeverity
 from app.models import Bug
-from app.models import BugAnnex
-from app.models import BugHistory
-from app.models import BugSolution
 
 from app.api.utils import get_listing
 from app.api.auth import get_user_object
-from app.api.auth import get_user_name
 from app.api.auth import get_uid
 
 """

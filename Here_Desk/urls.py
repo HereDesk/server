@@ -38,8 +38,20 @@ from app.api.pm import members
 from app.api.pm import module
 
 from app.api.qa import config as qa_config
-from app.api.qa import bug
-from app.api.qa import bug_search
+
+from app.api.qa.bug import datalist as bug_list
+from app.api.qa.bug import create as bug_create
+from app.api.qa.bug import edit as bug_edit
+from app.api.qa.bug import delete as bug_delete
+from app.api.qa.bug import details as bug_details
+from app.api.qa.bug import report as bug_report
+from app.api.qa.bug import search as bug_search
+from app.api.qa.bug import export as bug_export
+from app.api.qa.bug import action as bug_action
+from app.api.qa.bug import annex as bug_annex
+from app.api.qa.bug import support as bug_support
+
+
 from app.api.qa import testcase
 from app.api.qa import testsuite
 
@@ -138,25 +150,28 @@ urlpatterns = [
     url(r'^api/qa/testsuite/cell/run',testsuite.testsutie_cell_run,name="testsutie_cell_run"), 
 
     # bug
-    url(r'^api/qa/bug/bug_property',bug.bug_property, name='bug_property'),
-    url(r'^api/qa/bug/solution',bug.bug_solution, name='bug_solution'),
-    url(r'^api/qa/bug/list',bug.bug_list, name='bug_list'),
-    url(r'^api/qa/bug/export',bug.export,name='export'),
+    url(r'^api/qa/bug/bug_property',bug_support.property, name='bug_property'),
+    
+    url(r'^api/qa/bug/list',bug_list.list, name='bug_list'),
     url(r'^api/qa/bug/search',bug_search.search, name='bug_search'),
-    url(r'^api/qa/bug/details',bug.details, name='bug_details'),
-    url(r'^api/qa/bug/delete',bug.delete, name='bug_delete'),
-    url(r'^api/qa/bug/create',bug.create, name='bug_create'),
-    url(r'^api/qa/bug/edit',bug.edit, name='bug_edit'),
-    url(r'^api/qa/bug/resolve',bug.resolve,name='bug_resolve'),
-    url(r'^api/qa/bug/assign',bug.assign,name='bug_assign'),
-    url(r'^api/qa/bug/history',bug.history,name='bug_history'),
-    url(r'^api/qa/bug/close',bug.close,name='bug_close'),
-    url(r'^api/qa/bug/reopen',bug.reopen,name='bug_reopen'),
-    url(r'^api/qa/bug/hangup',bug.hangup,name='bug_hangup'),
-    url(r'^api/qa/bug/add_notes',bug.add_notes,name='bug_add_notes'),
-    url(r'^api/qa/bug/report/generate',bug.bug_report,name='bug_report'),
-    url(r'^api/qa/bug/report/details',bug.report_details,name='bug_report_details'),
-    url(r'^api/qa/bug/annex/delete',bug.annex_delete,name='annex_delete'),
+    url(r'^api/qa/bug/create',bug_create.create, name='bug_create'),
+    url(r'^api/qa/bug/edit',bug_edit.edit, name='bug_edit'),
+    url(r'^api/qa/bug/details',bug_details.details, name='bug_details'),
+    url(r'^api/qa/bug/history',bug_details.history,name='bug_history'),
+    url(r'^api/qa/bug/export',bug_export.export,name='export'),
+
+    url(r'^api/qa/bug/delete',bug_delete.delete, name='bug_delete'),
+    url(r'^api/qa/bug/resolve',bug_action.resolve,name='bug_resolve'),
+    url(r'^api/qa/bug/assign',bug_action.assign,name='bug_assign'),
+    url(r'^api/qa/bug/close',bug_action.close,name='bug_close'),
+    url(r'^api/qa/bug/reopen',bug_action.reopen,name='bug_reopen'),
+    url(r'^api/qa/bug/hangup',bug_action.hangup,name='bug_hangup'),
+
+    url(r'^api/qa/bug/report/generate',bug_report.report,name='bug_report'),
+    url(r'^api/qa/bug/report/details',bug_report.report_details,name='bug_report_details'),
+
+    url(r'^api/qa/bug/add_notes',bug_action.add_notes,name='bug_add_notes'),
+    url(r'^api/qa/bug/annex/delete',bug_annex.delete,name='annex_delete'),
 
 
     # 权限控制
