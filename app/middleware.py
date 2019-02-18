@@ -102,19 +102,19 @@ class CheckUserIdentity(MiddlewareMixin):
 
         # request method
         method = request.method
-        self.product_code = ""
+        self.product_id = ""
         if method == "GET":
             request_content = request.META["QUERY_STRING"]
-            if "product_code" in request.GET:
-                self.product_code = request.GET["product_code"]
+            if "product_id" in request.GET:
+                self.product_id = request.GET["product_id"]
         elif method == "POST":
             if request.path == "/api/support/upload":
                 pass
             else:
                 try:
                     request_content = json.loads(request.body)
-                    if "product_code" in request_content:
-                       self. product_code = request_content["product_code"]
+                    if "product_id" in request_content:
+                       self.product_id = request_content["product_id"]
                 except Exception as e:
                     print(e)
                     return JsonResponse({"status":14404,"msg":"POST请求不能为空、且请求必须为json"})
@@ -138,6 +138,7 @@ class CheckUserIdentity(MiddlewareMixin):
             return JsonResponse({"status":14404,"msg":"异常请求."})
         print(self.ip,self.user_agent,self.platform,self.browser)
             
+
     def process_view(self,request, view, args, kwargs):
 
         """
@@ -168,8 +169,15 @@ class CheckUserIdentity(MiddlewareMixin):
         try:
             user_data = Authentication.objects.\
                 filter(token=token).\
-                annotate(Group=F("uid__group__group"),realname=F("uid__realname"),user_status=F("uid__user_status")).\
-                values("token","uid","Group","realname","user_status")[:][0]
+                annotate(
+                    identity=F("uid__identity"),
+                    realname=F("uid__realname"),
+                    user_status=F("uid__user_status")).\
+                values("uid","identity","token","realname","user_status")[:][0]
+
+            print("---------------------userinfo----------------")
+            print(user_data,"\n")
+
         except Exception as e:
             print(e)
             return JsonResponse({"status": 14402, "msg": "身份令牌无效，请求中止"})
@@ -182,7 +190,11 @@ class CheckUserIdentity(MiddlewareMixin):
             today = time.strftime("%Y-%m-%d", time.localtime())
             if "product_release" in self.path:
                 flag = "登录"
-                today_is_login = UserLog.objects.filter(Q(create_time__gte=today) & Q(flag="登录") & Q(ip=self.ip)).\
+                today_is_login = UserLog.objects.\
+                    filter(
+                        Q(create_time__gte=today) & 
+                        Q(flag="登录") & 
+                        Q(ip=self.ip)).\
                     values("id","user_id")
                 if len(today_is_login) == 0:
                     record_log = UserLog(
@@ -201,28 +213,44 @@ class CheckUserIdentity(MiddlewareMixin):
             pass
 
         # 检查访问权限
-        if user_data["Group"] == "admin":
+        pass_path = [
+            "/api/user/pages",
+            "api/qa/testcase/add",
+            "api/qa/bug/create"]
+
+        if user_data["identity"] == "0":
             return None 
-        elif self.path == "/api/user/pages":
+        elif self.path in pass_path:
             return None
         else:
-            # 检查接口权限
-            is_allow = ApiPermissions.objects.\
-                filter(Q(group=user_data["Group"]) & Q(api_id__url=self.path) & Q(is_allow=1)).count()
-            if is_allow == 1:
-                return None
-            else:
-                return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"}) 
 
-            # 项目权限检查
-            if self.product_code:
-                try:
-                    user_id = user_data["uid"]
-                    ProductMembers.objects.get(
-                        Q(product_code=self.product_code) & Q(member_id=user_id) & Q(status=0)
-                    )
-                except Exception as e:
+            
+            if self.product_id:
+                user_id = user_data["uid"]
+
+                # 项目权限检查
+                query_product_role = ProductMembers.objects.\
+                    filter(
+                        Q(product_id=self.product_id) & 
+                        Q(member_id=user_id) & 
+                        Q(status=0)
+                    ).\
+                    values("role")[0]
+                if len(query_product_role) == 0:
                     return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
-            else:
-                return JsonResponse({"status":14444,"msg":"错误的产品名称"})
-        
+                else:
+                    product_role = query_product_role["role"]
+
+                    # 检查接口权限
+                    print(product_role,self.path)
+                    is_num = ApiPermissions.objects.\
+                        filter(
+                            Q(group=product_role) & 
+                            Q(api_id__url=self.path) & 
+                            Q(is_allow=1)).count()
+                    if is_num == 1:
+                        return None
+                    else:
+                        return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
+
+            

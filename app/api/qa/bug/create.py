@@ -58,7 +58,7 @@ def create(request):
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"缺少必要的参数"})
 
-    m1_id,m2_id = None,None
+    m1_obj,m2_obj = None,None
     if "module_id" in req and req["module_id"]:
         try:
             m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])

@@ -94,9 +94,6 @@ urlpatterns = [
     # 管理员重置密码
     url(r'^api/user/reset_passwd', passwd.reset_passwd, name='reset_passwd'),
 
-    # 产品、版本号
-    url(r'^api/pm/product_release', product.product_release, name='product_release'),
-
     # 项目或产品
     url(r'^api/pm/product/cascader/my', product.product_release_cascader, name='product_release_cascader'),
     url(r'^api/pm/product/my', product.my_product_list, name='my_product_info'),

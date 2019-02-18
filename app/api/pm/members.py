@@ -18,7 +18,7 @@ from app.models import Authentication
 from app.models import Product
 from app.models import ProductMembers
 from app.api.auth import get_user_object
-from app.api.auth import _auth
+
 
 curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 

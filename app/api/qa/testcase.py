@@ -10,7 +10,6 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 from django.db.models import Q
 from django.db.models import F
-from django.db.models import Count
 from django.db.models import Sum
 from django.views.generic import View
 from django.views.decorators.csrf import csrf_exempt

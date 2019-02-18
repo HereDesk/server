@@ -28,7 +28,6 @@ from app.api.gpd import p_encrypt
 from app.api.gpd import generate_token
 
 from app.api.auth import get_uid
-from app.api.auth import _auth
 
 """
   用户信息

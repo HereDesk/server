@@ -25,13 +25,13 @@ from app.models import Bug
 from app.api.utils import get_listing
 from app.api.auth import get_user_object
 from app.api.auth import get_uid
-from app.api.auth import get_user_group
+from app.api.auth import get_prdocut_user_role
 
-@require_http_methods(['GET'])
+@require_http_methods(["GET"])
 def data_statistics(request):
     uid = get_uid(request)
     try:
-        product_id = request.GET['product_id']
+        product_id = request.GET["product_id"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"产品不能为空哦"})
 
@@ -45,13 +45,13 @@ def data_statistics(request):
     }
     # 分派给我(需要我处理的)
     try:
-        my_group = get_user_group(request)
-        if my_group == 'test':
+        my_role = get_prdocut_user_role(request)
+        if my_role == "test":
             WaitPending = Bug.objects.\
                 filter(
                     Q(assignedTo_id=uid) & 
                     Q(product_id=product_id) & 
-                    ~Q(status='closed')
+                    ~Q(status="closed")
                 ).count()
         else:
             WaitPending = Bug.objects.\
@@ -59,15 +59,15 @@ def data_statistics(request):
                     Q(assignedTo_id=uid) & 
                     Q(product_id=product_id) & 
                     (
-                        Q(status='Open') | 
-                        Q(status='Hang-up') |
-                        Q(status='Reopen')
+                        Q(status="Open") | 
+                        Q(status="Hang-up") |
+                        Q(status="Reopen")
                     )
                 ).count()
     except Exception as e:
         WaitPending = 0
     finally:
-        data['WaitPending']= WaitPending
+        data["WaitPending"]= WaitPending
 
     # 我解决的
     try:
@@ -75,7 +75,7 @@ def data_statistics(request):
     except Exception as e:
         data_resolvedByMe = 0
     finally:
-        data['ResolvedByMe']= data_resolvedByMe
+        data["ResolvedByMe"]= data_resolvedByMe
 
     # 所有未解决的
     try:
@@ -83,15 +83,15 @@ def data_statistics(request):
             filter(
                 Q(product_id=product_id) & 
                 ( 
-                    Q(status='Open') | 
-                    Q(status='Hang-up') |
-                    Q(status='Reopen')
+                    Q(status="Open") | 
+                    Q(status="Hang-up") |
+                    Q(status="Reopen")
                 )
             ).count()
     except Exception as e:
         data_not_Fixed = 0
     finally:
-        data['NotFixed']= data_not_Fixed
+        data["NotFixed"]= data_not_Fixed
 
     # 我创建的
     try:
@@ -99,7 +99,7 @@ def data_statistics(request):
     except Exception as e:
         data_createdByMe = 0
     finally:
-        data['CreatedByMe']= data_createdByMe
+        data["CreatedByMe"]= data_createdByMe
 
     # 我关闭的
     try:
@@ -107,15 +107,15 @@ def data_statistics(request):
     except Exception as e:
         data_ClosedByMe = 0
     finally:
-        data['ClosedByMe']= data_closedByMe
+        data["ClosedByMe"]= data_closedByMe
 
     # 所有已解决待关闭
     try:
-        data_Fixed = Bug.objects.filter(Q(product_id=product_id) & Q(status='Fixed')).count()
+        data_Fixed = Bug.objects.filter(Q(product_id=product_id) & Q(status="Fixed")).count()
     except Exception as e:
         data_Fixed = 0
     finally:
-        data['Fixed']= data_Fixed
+        data["Fixed"]= data_Fixed
 
     return JsonResponse({"status":20000,"data":data})
 

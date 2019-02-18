@@ -12,7 +12,7 @@ from app.models import Product
 from app.models import Release
 from app.models import Authentication
 from app.api.auth import get_user_object
-from app.api.auth import _auth
+
 """
   版本
 """

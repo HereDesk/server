@@ -17,35 +17,9 @@ from app.models import ProductMembers
 
 from app.api.auth import get_user_object
 from app.api.auth import get_uid
-from app.api.auth import _auth
 from app.api.auth import get_myinfo
 from app.api.auth import is_admin
-"""
-  获取项目与版本（用户）
-"""
-@require_http_methods(["GET"])
-def product_release(request):
-    
-    user_id = get_uid(request)
-    product = ProductMembers.objects.filter(Q(member_id=user_id) & Q(status=0)).\
-        annotate(
-            product_name=F('product_code__product_name'),
-            create_time=F('product_code__create_time')).\
-        values('product_code','product_name').order_by('-create_time')
-    if len(product) == 0:
-        return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
-    else:
-        data = []
-        for i in product:
-            data.append({
-                'product_code':i['product_code'],
-                'product_name':i['product_name'],
-                'data':list(
-                    Release.objects.filter(product_code=i['product_code']).\
-                    values('version').order_by('-create_time')
-                    )
-                })
-        return JsonResponse({"status":20000,"data":data})
+
 
 """
   cascader类型 获取项目与版本（用户）===仅仅用于统计
@@ -77,9 +51,9 @@ def product_release_cascader(request):
 """
 @require_http_methods(["GET"])
 def my_product_list(request):
+
     user_id = get_uid(request)
     is_admin_role = is_admin(request)
-    print(is_admin_role)
 
     product = ProductMembers.objects.\
         filter(Q(member_id=user_id) & Q(status=0)).\
@@ -137,11 +111,11 @@ def all_product_list(request):
             user_data = ProductMembers.objects.\
                 filter(Q(member_id=uid) & Q(status=0)).\
                 annotate(
-                    product_id=F('product_code__product_id'),\
-                    product_name=F('product_code__product_name'),\
-                    create_time=F('product_code__create_time'),
-                    creator=F('product_code__creator_id__realname'),
-                    creator_id=F('product_code__creator_id')).\
+                    product_name=F('product_id__product_name'),
+                    product_code=F('product_id__product_code'),
+                    create_time=F('product_id__create_time'),
+                    creator=F('member_id__realname'),
+                    creator_id=F('product_id__creator_id')).\
                 values('product_id','product_code','product_name','create_time','creator','creator_id')
             data = list(user_data)
             if data:

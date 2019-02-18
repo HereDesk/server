@@ -12,7 +12,6 @@ from app.models import User
 from app.models import Pages
 from app.models import PagesPermissions
 
-from app.api.auth import get_user_group
 from app.api.auth import is_admin
 from app.api.auth import get_uid
 
