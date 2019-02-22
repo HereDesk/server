@@ -212,45 +212,84 @@ class CheckUserIdentity(MiddlewareMixin):
             print(e)
             pass
 
-        # 检查访问权限
-        pass_path = [
-            "/api/user/pages",
-            "api/qa/testcase/add",
-            "api/qa/bug/create"]
+        # super path
+        super_path = [
+            "/api/system"
+        ]
 
+        # command path
+        common_path = [
+            "/api/support",
+            "/api/user",
+            "/api/qa/get_config",
+            "/api/qa/create_config",
+            "/api/pm/product"
+        ]
+
+        # required include product_id api_url
+        required_include_product_path = [
+            "/api/dashboard",
+            "/api/analyze",
+            "/api/pm/release",
+            "/api/pm/member",
+            "/api/pm/module",
+            "/api/qa/bug/list",
+            "/api/qa/bug/search",
+            "/api/qa/bug/create",
+            "/api/qa/bug/export",
+            "/api/qa/bug/report",
+            "/api/qa/testcase/list",
+            "/api/qa/testcase/search",
+            "/api/qa/testcase/export",
+            "/api/qa/testcase/add",
+            "/api/qa/testsuite/create",
+            "/api/qa/testsuite/list",
+            "/api/qa/bug/report"
+        ]
+
+        print("--------------")
+        print(user_data["identity"])
+
+        # super/admin user
         if user_data["identity"] == "0":
             return None 
-        elif self.path in pass_path:
+
+        # The average user
+        if user_data["identity"] != "0" and self.path in super_path:
+            return JsonResponse({"status":14444,"msg":"您的请求，超出了权限"})
+
+        if self.path in common_path:
             return None
         else:
-
-            
-            if self.product_id:
-                user_id = user_data["uid"]
-
-                # 项目权限检查
-                query_product_role = ProductMembers.objects.\
-                    filter(
-                        Q(product_id=self.product_id) & 
-                        Q(member_id=user_id) & 
-                        Q(status=0)
-                    ).\
-                    values("role")[0]
-                if len(query_product_role) == 0:
-                    return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
+            if self.path in required_include_product_path:
+                if not self.product_id:
+                    return JsonResponse({"status":40004,"msg":"项目ID不能为空"})
                 else:
-                    product_role = query_product_role["role"]
+                    user_id = user_data["uid"]
 
-                    # 检查接口权限
-                    print(product_role,self.path)
-                    is_num = ApiPermissions.objects.\
+                    # 项目权限检查
+                    query_product_role = ProductMembers.objects.\
                         filter(
-                            Q(group=product_role) & 
-                            Q(api_id__url=self.path) & 
-                            Q(is_allow=1)).count()
-                    if is_num == 1:
-                        return None
+                            Q(product_id=self.product_id) & 
+                            Q(member_id=user_id) & 
+                            Q(status=0)
+                        ).\
+                        values("role")[0]
+                    if len(query_product_role) == 0:
+                        return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
                     else:
-                        return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
+                        product_role = query_product_role["role"]
+
+                        # 检查接口权限
+                        print(product_role,self.path)
+                        is_num = ApiPermissions.objects.\
+                            filter(
+                                Q(group=product_role) & 
+                                Q(api_id__url=self.path) & 
+                                Q(is_allow=1)).count()
+                        if is_num == 1:
+                            return None
+                        else:
+                            return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
 
             
