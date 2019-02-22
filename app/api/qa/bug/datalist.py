@@ -21,6 +21,7 @@ from app.models import Bug
 
 from app.api.utils import get_listing
 from app.api.auth import get_uid
+from app.api.auth import get_prdocut_user_role
 
 # get cureent time
 curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
@@ -102,25 +103,25 @@ def list(request):
             conditions.children.append(Q(**{"creator_id":get_uid(request)}))
         if operate == "notClosed":
             q1.children.append(~Q(**{"status":"Closed"}))
-        # if operate == "WaitPending":
-        #     my_group = get_user_group(request)
-        #     if my_group == 'test':
-        #         q2 = Q()
-        #         q2.connector = "AND"
-        #         q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
-        #         q2.children.append(~Q(**{"status":"closed"}))
-        #         conditions.add(q2, "AND")
-        #     else:
-        #         q2 = Q()
-        #         q2.connector = "AND"
-        #         q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
-        #         temp_q2_1 = Q()
-        #         temp_q2_1.connector = "OR"
-        #         temp_q2_1.children.append(Q(**{"status":"Open"}))
-        #         temp_q2_1.children.append(Q(**{"status":"Reopen"}))
-        #         temp_q2_1.children.append(Q(**{"status":"Hang-up"}))
-        #         q2.add(temp_q2_1, "AND")
-        #         conditions.add(q2, "AND")
+        if operate == "WaitPending":
+            product_role = get_prdocut_user_role(request,product_id)
+            if product_role == 'test':
+                q2 = Q()
+                q2.connector = "AND"
+                q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
+                q2.children.append(~Q(**{"status":"closed"}))
+                conditions.add(q2, "AND")
+            else:
+                q2 = Q()
+                q2.connector = "AND"
+                q2.children.append(Q(**{"assignedTo_id":get_uid(request)}))
+                temp_q2_1 = Q()
+                temp_q2_1.connector = "OR"
+                temp_q2_1.children.append(Q(**{"status":"Open"}))
+                temp_q2_1.children.append(Q(**{"status":"Reopen"}))
+                temp_q2_1.children.append(Q(**{"status":"Hang-up"}))
+                q2.add(temp_q2_1, "AND")
+                conditions.add(q2, "AND")
         if operate == "NotResolved":
             q2 = Q()
             q2.connector = "OR"
