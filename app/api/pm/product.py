@@ -41,8 +41,8 @@ def product_release_cascader(request):
                 'label':i['product_code'],
                 'children':list(
                     Release.objects.filter(product_id=i['product_id']).\
-                    annotate(value=F('version'),label=F('version')).\
-                    values('value','label'))
+                        annotate(value=F('version'),label=F('version')).\
+                        values('value','label'))
                 })
         return JsonResponse({"status":20000,"data":data})
 
@@ -78,7 +78,8 @@ def my_product_list(request):
                 'product_name':i['product_name'],
                 'data':list(Release.objects.\
                     filter(product_id=i['product_id']).\
-                    values('version').order_by('-create_time'))
+                    annotate(value=F('version'),label=F('version')).\
+                    values("label",'version').order_by('-create_time'))
                 })
         return JsonResponse({"status":20000,"data":data})
 

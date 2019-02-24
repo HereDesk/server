@@ -243,7 +243,7 @@ class CheckUserIdentity(MiddlewareMixin):
             "/api/qa/testcase/export",
             "/api/qa/testcase/add",
             "/api/qa/testsuite/create",
-            "/api/qa/testsuite/list",
+            # "/api/qa/testsuite/list",
             "/api/qa/bug/report"
         ]
 
