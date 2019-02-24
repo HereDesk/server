@@ -62,7 +62,13 @@ from app.api.qa.testcase import fall as case_fall
 from app.api.qa.testcase import review as case_review
 
 
-from app.api.qa import testsuite
+from app.api.qa.testsuite import create as testsuite_create
+from app.api.qa.testsuite import datalist as testsuite_list
+
+from app.api.qa.testsuite.cell import add as cell_add
+from app.api.qa.testsuite.cell import loader as cell_loader_list
+from app.api.qa.testsuite.cell import run as cell_run
+from app.api.qa.testsuite.cell import run_list as cell_run_list
 
 from app.api.dashboard import dashboard
 from app.api.analyze import bug_analyze
@@ -151,13 +157,12 @@ urlpatterns = [
     url(r"^api/qa/testcase/export",case_export.export,name="case_export"),
 
     # test case sutie and cell
-    url(r"^api/qa/testsuite/create",testsuite.testsuite_create,name="testsuite_create"),
-    url(r"^api/qa/testsuite/list",testsuite.testsuite_list,name="testsuite_list"),
-
-    url(r"^api/qa/testsuite/cell/brief_list",testsuite.cell_brief_list,name="cell_brief_list"),
-    url(r"^api/qa/testsuite/cell/list",testsuite.testsutie_cell_list,name="testsuite_cell_list"),
-    url(r"^api/qa/testsuite/cell/add",testsuite.testsutie_cell_add,name="testsutie_cell_add"),
-    url(r"^api/qa/testsuite/cell/run",testsuite.testsutie_cell_run,name="testsutie_cell_run"), 
+    url(r"^api/qa/testsuite/create",testsuite_create.create,name="testsuite_create"),
+    url(r"^api/qa/testsuite/list",testsuite_list.data_list,name="testsuite_list"),
+    url(r"^api/qa/testsuite/cell/run_list",cell_run_list.run_list,name="cell_run_list"),
+    url(r"^api/qa/testsuite/cell/run",cell_run.run,name="cell_run"),
+    url(r"^api/qa/testsuite/cell/loader_list",cell_loader_list.loader_list,name="cell_loader_list"),
+    url(r"^api/qa/testsuite/cell/add",cell_add.add,name="cell_add"), 
 
     # bug
     url(r"^api/qa/bug/bug_property",bug_support.property, name="bug_property"),
