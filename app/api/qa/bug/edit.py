@@ -68,17 +68,22 @@ def edit(request):
             return JsonResponse({"status":40004,"msg":"产品名称无效"})
 
     if "module_id" in req and req["module_id"]:
-        try:
-            m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
-            bug_obj.m1_id = m1_obj
-        except Exception as e:
-            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+        if len(req["module_id"]) == 1:
+            try:
+                m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
+                bug_obj.m1_id = m1_obj
+                bug_obj.m2_id = None
+            except Exception as e:
+                return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
             
         if len(req["module_id"]) == 2:
             try:
+                m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
                 m2_obj = ModuleB.objects.get(m2_id=req["module_id"][1])
                 bug_obj.m2_id = m2_obj
+                bug_obj.m1_id = m1_obj
             except Exception as e:
+                print(e)
                 return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
 
     # check version_object
