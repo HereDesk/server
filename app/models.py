@@ -347,7 +347,7 @@ class TestCaseFiles(models.Model):
     )
     id = models.AutoField(primary_key=True)
     case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id")
-    file_path = models.CharField(u"路径",max_length=200)
+    url = models.CharField(u"路径",max_length=200)
     isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
