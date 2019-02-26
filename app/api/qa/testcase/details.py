@@ -56,12 +56,12 @@ def details(request):
         review = TestCaseReview.objects.filter(Q(case_id=case_id)).\
             annotate(realname=F("user_id__realname")).values("remark","realname","create_time","result")
 
-        annex = TestCaseFiles.objects.filter(Q(case_id=case_id) & Q(isDelete=0)).values("file_path")
+        annex = TestCaseFiles.objects.filter(Q(case_id=case_id) & Q(isDelete=0)).values("url")
 
         annex_tmp = []
         for ax in annex:
             try:
-                ax["suffix"] = str(ax["file_path"]).split('.')[-1]
+                ax["suffix"] = str(ax["url"]).split('.')[-1]
             except Exception as e:
                 ax["suffix"] = "unknow"
             annex_tmp.append(ax)
@@ -69,4 +69,9 @@ def details(request):
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status": 20000, "data": list(data)[0],"review":list(review),"annex":list(annex_tmp)})
+        return JsonResponse({
+            "status": 20000, 
+            "data": list(data)[0],
+            "review":list(review),
+            "annex":list(annex_tmp)
+        })

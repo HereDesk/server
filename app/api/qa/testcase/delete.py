@@ -62,14 +62,14 @@ def delete(request):
 def annex_delete(request):
     try:
         req = json.loads(request.body)
-        file_path = req["file_path"]
+        url = req["url"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"文件路径不能为空哦"})
     
     try:
-        file_obj = TestCaseFiles.objects.get(file_path=file_path)
+        file_obj = TestCaseFiles.objects.get(url=url)
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"没找到数据"})
+        return JsonResponse({"status":40004,"msg":"没找到数据"})
     try:
         file_obj.isDelete = 1
         file_obj.save()

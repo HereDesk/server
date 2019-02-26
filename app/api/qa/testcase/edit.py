@@ -110,7 +110,7 @@ def add(request):
                     for f in req["annex"]:
                         file = TestCaseFiles(
                             case_id = case_id,
-                            file_path = f
+                            url = f
                             )
                         file.save()
         except Exception as e:
@@ -179,7 +179,7 @@ def edit(request):
                 for f in annex:
                     aex = TestCaseFiles(
                         case_id = case_obj,
-                        file_path = f
+                        url = f
                         )
                     aex.save()
         except Exception as e:

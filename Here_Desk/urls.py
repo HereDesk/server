@@ -151,7 +151,7 @@ urlpatterns = [
     url(r"^api/qa/testcase/fall",case_fall.fall,name="case_fall"),
 
     url(r"^api/qa/testcase/del", case_delete.delete, name="case_delete"),
-    url(r"^api/qa/testcase/annex_delete",case_delete.annex_delete,name="case_annex_delete"),
+    url(r"^api/qa/testcase/annex/delete",case_delete.annex_delete,name="case_annex_delete"),
 
     url(r"^api/qa/testcase/review", case_review.review, name="case_review"),
     url(r"^api/qa/testcase/export",case_export.export,name="case_export"),
