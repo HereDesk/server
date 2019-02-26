@@ -587,11 +587,18 @@ class BugReport(models.Model):
   bug history
 """
 class BugHistory(models.Model):
+    remark_status = (
+        ("0", u"删除"),
+        ("1", u"新建"),
+        ("2", u"修改")
+    )
     id = models.AutoField(primary_key=True)
+    record_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
     bug_id = models.ForeignKey(Bug,to_field="bug_id",on_delete=models.CASCADE,db_column="bug_id")
     user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id",null=True)
     desc = models.TextField(u"说明",max_length=10000)
     remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=2000)
+    remark_status = models.IntegerField(u"备注状态",choices=remark_status,default=1)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
     

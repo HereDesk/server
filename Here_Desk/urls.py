@@ -185,7 +185,7 @@ urlpatterns = [
     url(r"^api/qa/bug/report/generate",bug_report.report,name="bug_report"),
     url(r"^api/qa/bug/report/details",bug_report.report_details,name="bug_report_details"),
 
-    url(r"^api/qa/bug/add_notes",bug_action.add_notes,name="bug_add_notes"),
+    url(r"^api/qa/bug/remarks",bug_action.remarks,name="bug_remarks"),
     url(r"^api/qa/bug/annex/delete",bug_annex.delete,name="annex_delete"),
 
 

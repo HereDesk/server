@@ -282,34 +282,69 @@ def hangup(request):
 """
 @csrf_exempt
 @require_http_methods(["POST"])
-def add_notes(request):
-    try:
-        req = json.loads(request.body)
-        bug_id = req["bug_id"]
-        remark = req["remark"]
-    except Exception as e:
-        return JsonResponse({"status":40001,"msg":"缺陷ID和备注不能为空"})
-    else:
-        if len(remark) == 0 or len(remark) > 2000:
-            return JsonResponse({"status":40001,"msg":"备注的有效长度为1-2000"})
+def remarks(request):
+    req = json.loads(request.body)
 
-    try:
-        bug_object = Bug.objects.get(bug_id=bug_id)
-        bug_object.last_operation = get_user_object(request)
-        bug_object.save()
-    except Exception as e:
-        return JsonResponse({"status":40004,"msg":"bug_id无效"})
+    if "record_id" not in req:
+        try:
+            
+            bug_id = req["bug_id"]
+            remark = req["remark"]
+        except Exception as e:
+            return JsonResponse({"status":40001,"msg":"缺陷ID和备注不能为空"})
+        else:
+            if len(remark) == 0 or len(remark) > 2000:
+                return JsonResponse({"status":40001,"msg":"备注的有效长度为1-2000"})
 
-    try:
-        msg = "添加了备注。"
-        notes = BugHistory(
-            bug_id = bug_object,
-            remark = remark,
-            desc = msg,
-            user_id = get_user_object(request)
-            )
-        notes.save()
-    except Exception as e:
-        return JsonResponse({"status":20004,"msg":"提交失败"})
+        try:
+            bug_object = Bug.objects.get(bug_id=bug_id)
+            bug_object.last_operation = get_user_object(request)
+            bug_object.save()
+        except Exception as e:
+            return JsonResponse({"status":40004,"msg":"bug_id无效"})
+
+        try:
+            msg = "添加了备注。"
+            notes = BugHistory(
+                bug_id = bug_object,
+                remark = remark,
+                desc = msg,
+                user_id = get_user_object(request)
+                )
+            notes.save()
+        except Exception as e:
+            return JsonResponse({"status":20004,"msg":"提交失败"})
+        else:
+            return JsonResponse({"status":20000,"msg":"提交成功"})
     else:
-        return JsonResponse({"status":20000,"msg":"提交成功"})
+        try:
+            bug_id = req["bug_id"]
+            record_id = req["record_id"]
+            remark = req["remark"]
+        except Exception as e:
+            return JsonResponse({"status":40001,"msg":"ID和备注不能为空"})
+
+        try:
+            record_object = BugHistory.objects.get(record_id=record_id)
+        except Exception as e:
+            return JsonResponse({"status":40004,"msg":"ID无效"})
+
+        try:
+            bug_object = Bug.objects.get(bug_id=bug_id)
+            bug_object.last_operation = get_user_object(request)
+            bug_object.save()
+        except Exception as e:
+            return JsonResponse({"status":40004,"msg":"bug_id无效"})
+
+        try:
+            if len(remark) == 0:
+                record_object.remark_status = 0
+            else:
+                record_object.remark_status = 2
+                record_object.remark = remark
+            record_object.save()
+        except Exception as e:
+            return JsonResponse({"status":20004,"msg":"修改失败"})
+        else:
+            return JsonResponse({"status":20000,"msg":"修改成功"})
+

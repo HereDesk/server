@@ -142,7 +142,6 @@ def list(request):
     conditions.add(q1, "AND")
 
     try:
-        print(conditions)
         data = Bug.objects.filter(conditions).\
             annotate(
                 creator_user=F("creator_id__realname"),

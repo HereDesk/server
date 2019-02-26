@@ -83,14 +83,14 @@ def history(request):
     try:
         bug_id = request.GET["bug_id"]
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"缺少必要的请求参数"})
+        return JsonResponse({"status":40001,"msg":"BugId不能为空"})
 
     data = BugHistory.objects.filter(bug_id=bug_id).\
         annotate(
             username = F("user_id__realname")
             ).\
         order_by("create_time").\
-        values("create_time","desc","username","remark")
+        values("record_id","user_id","bug_id","username","desc","remark_status","remark","create_time")
 
     return JsonResponse({"status":20000,"data":list(data)})
     
