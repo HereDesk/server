@@ -251,7 +251,7 @@ class CheckUserIdentity(MiddlewareMixin):
         print(user_data["identity"])
 
         # super/admin user
-        if user_data["identity"] == "0":
+        if user_data["identity"] == 0:
             return None 
 
         # The average user

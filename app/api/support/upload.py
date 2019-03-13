@@ -10,6 +10,29 @@ from django.views.decorators.csrf import csrf_exempt
 from app.models import Files
 from app.models import User
 
+from app.models import Bug
+from app.models import BugAnnex
+from app.models import TestCase
+from app.models import TestCaseFiles
+
+def save_file_info(data_type,req,url):
+    try:
+        if data_type == "bug":
+            id = req["bug_id"]
+            bug_obj = Bug.objects.get(bug_id=id)
+            data = BugAnnex(bug_id=bug_obj,url=url)
+            data.save()
+        if data_type == "testcase":
+            id = req["case_id"]
+            case_obj = Bug.objects.get(case_id=id)
+            data = TestCaseFiles(case_id=case_obj,url=url)
+            data.save()
+    except Exception as e:
+        print(e)
+        return JsonResponse({"status":20004,"name":"服务器出小差了"})
+    else:
+        return JsonResponse({"status":20000,"name":"附件保存成功"})
+
 @csrf_exempt
 def upload(request):
 
@@ -56,4 +79,9 @@ def upload(request):
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"文件保存失败"})
     else:
-        return JsonResponse({"status":20000,"name":file_url})
+        if data_type == "bug":
+            return save_file_info("bug",request.GET,file_url)
+        elif data_type == "testcase":
+            return save_file_info("testcase",request.GET,file_url)
+        else:
+            return JsonResponse({"status":20000,"name":file_url})
