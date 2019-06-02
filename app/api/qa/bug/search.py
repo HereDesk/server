@@ -19,6 +19,7 @@ from django.views.decorators.http import require_http_methods
 
 from app.models import Product
 from app.models import Release
+from app.models import ProductMembers
 
 from app.models import Bug
 
@@ -151,6 +152,9 @@ def handle_search(data):
         print(query)
     return query
 
+
+
+
 """
   bug search
 """
@@ -242,6 +246,9 @@ def handle_advanced_search(req):
 
     return conditions
 
+
+
+
 @csrf_exempt
 @require_http_methods(["POST"])
 def search(request):
@@ -289,32 +296,37 @@ def search(request):
     query.children.append(Q(**{"isDelete":0}))
 
     # simple search
-    if advanced_search == "no":
-        try:
-            sdata = req["SearchType"]
-            wd = req["wd"]
-        except Exception as e:
-            return JsonResponse({"status": 40001, "msg": u"请求缺少必要的值."})
+    try:
+        wd = req["wd"]
+    except Exception as e:
+        return JsonResponse({"status": 40001, "msg": u"请求缺少必要的值."})
 
-
-        if "ID" in sdata:
-            query.children.append(Q(**{"id__icontains":wd}))
-        if "title" in sdata:
+    if wd.isdigit():
+        query.children.append(Q(**{"id__icontains":wd}))
+    else:
+        developer_list = ProductMembers.objects.\
+            filter(Q(product_id=product_id) & Q(role="developer")).\
+            annotate(realname = F("member_id__realname")).\
+            values("realname")
+        developer_list = [ i["realname"] for i in developer_list ]
+        if wd in developer_list:
+            query.children.append(Q(**{"assignedTo_id__realname__icontains":wd}))
+        else:
             query.children.append(Q(**{"title__icontains":wd}))
 
-        if "status" in req:
-            if req["status"] == "all":
-                del req["status"]
-            elif req["status"] == "notClosed":
-                query.children.append(~Q(**{"status":"Closed"}))
-            else:
-                status = req["status"]
-                query.children.append(Q(**{"status":status}))
+    if "status" in req:
+        if req["status"] == "all":
+            del req["status"]
+        elif req["status"] == "notClosed":
+            query.children.append(~Q(**{"status":"Closed"}))
+        else:
+            status = req["status"]
+            query.children.append(Q(**{"status":status}))
 
     # advanced search
-    if advanced_search == "yes":
-        advanced_query = handle_advanced_search(req)
-        query.add(advanced_query,"AND")
+    # if advanced_search == "yes":
+    #     advanced_query = handle_advanced_search(req)
+    #     query.add(advanced_query,"AND")
 
     try:
         data = Bug.objects.filter(query). \

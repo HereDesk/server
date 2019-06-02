@@ -103,6 +103,7 @@ def add(request):
         return JsonResponse({"status":20004,"msg":"用例保存失败"})
     else:
         case_id = TestCase.objects.get(case_id=data.case_id)
+        
         # 保存附件
         try:
             if "annex" in req:
