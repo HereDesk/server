@@ -2,7 +2,7 @@
 # wandali
 
 """
-  数据分页
+  数据分页(page)
 """
 
 from django.http import JsonResponse
