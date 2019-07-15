@@ -57,7 +57,7 @@ def members_list(request):
                 realname = F("member_id__realname"),
                 user_id = F("member_id"),
                 role_name=F("role__name")).\
-            values("user_id","realname","role_name","status","join_time","banned_time")
+            values("user_id","realname","role","role_name","status","join_time","banned_time")
 
     
     return JsonResponse({"status": 20000, "product_id":product_id,"data": list(data)})
