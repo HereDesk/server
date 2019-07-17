@@ -88,7 +88,7 @@ class CheckUserIdentity(MiddlewareMixin):
     def process_request(self, request):
 
         """
-            1. get request info: 
+            1. get request info:
                 1) method
                 2) ip
                 3) user_agent
@@ -137,7 +137,7 @@ class CheckUserIdentity(MiddlewareMixin):
         except Exception as e:
             return JsonResponse({"status":14404,"msg":"异常请求."})
         print(self.ip,self.user_agent,self.platform,self.browser)
-            
+
 
     def process_view(self,request, view, args, kwargs):
 
@@ -149,7 +149,7 @@ class CheckUserIdentity(MiddlewareMixin):
         # get token
         if request.path == "/api/user/login":
             return None
-            
+
         token = ""
         if request.META.get("HTTP_AUTHORIZATION"):
             token = request.META["HTTP_AUTHORIZATION"].split(" ")[1]
@@ -165,7 +165,7 @@ class CheckUserIdentity(MiddlewareMixin):
         else:
             return JsonResponse({"status":14402,"msg":"出错了，未取到token或cookie"})
 
-        # check user token 
+        # check user token
         try:
             user_data = Authentication.objects.\
                 filter(token=token).\
@@ -180,7 +180,7 @@ class CheckUserIdentity(MiddlewareMixin):
 
         except Exception as e:
             print(e)
-            return JsonResponse({"status": 14402, "msg": "身份令牌无效，请求中止"})
+            return JsonResponse({"status": 14402, "msg": "身份令牌无效，被阻拦，请求中止"})
         else:
             if user_data["user_status"] == 2:
                 return JsonResponse({"status": 14402, "msg": "已被封禁,请联系管理员."})
@@ -192,8 +192,8 @@ class CheckUserIdentity(MiddlewareMixin):
                 flag = "登录"
                 today_is_login = UserLog.objects.\
                     filter(
-                        Q(create_time__gte=today) & 
-                        Q(flag="登录") & 
+                        Q(create_time__gte=today) &
+                        Q(flag="登录") &
                         Q(ip=self.ip)).\
                     values("id","user_id")
                 if len(today_is_login) == 0:
@@ -252,7 +252,7 @@ class CheckUserIdentity(MiddlewareMixin):
 
         # super/admin user
         if user_data["identity"] == 0:
-            return None 
+            return None
 
         # The average user
         if user_data["identity"] != "0" and self.path in super_path:
@@ -270,8 +270,8 @@ class CheckUserIdentity(MiddlewareMixin):
                     # 项目权限检查
                     query_product_role = ProductMembers.objects.\
                         filter(
-                            Q(product_id=self.product_id) & 
-                            Q(member_id=user_id) & 
+                            Q(product_id=self.product_id) &
+                            Q(member_id=user_id) &
                             Q(status=0)
                         ).\
                         values("role")[0]
@@ -284,12 +284,12 @@ class CheckUserIdentity(MiddlewareMixin):
                         print(product_role,self.path)
                         is_num = ApiPermissions.objects.\
                             filter(
-                                Q(group=product_role) & 
-                                Q(api_id__url=self.path) & 
+                                Q(user_role=product_role) &
+                                Q(api_id__url=self.path) &
                                 Q(is_allow=1)).count()
                         if is_num == 1:
                             return None
                         else:
                             return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
 
-            
+

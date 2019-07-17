@@ -114,7 +114,7 @@ def module_list_b(request):
 
     try:
         module = ModuleB.objects.\
-            filter(Q(m1_id=m1_id) & Q(isDelete=0)).\
+            filter(Q(m1_id=m1_id) & Q(is_delete=0)).\
             values("id","m2_name").\
             order_by("id")
     except Exception as e:
@@ -189,7 +189,7 @@ def module_edit_b(request):
     try:
         # 保存module
         m2_obj.m2_name=m2_name
-        m2_obj.isChange = 1
+        m2_obj.is_change = 1
         m2_obj.changer_id = get_user_object(request)
         m2_obj.change_time = curremt_time
         m2_obj.save()
@@ -219,7 +219,7 @@ def module_del_b(request):
         return JsonResponse({"status":40001,"msg":"该条记录不存在"})
     try:
         # 保存module
-        m2_obj.isDelete = 1
+        m2_obj.is_delete = 1
         m2_obj.deleter_id = get_user_object(request)
         m2_obj.delete_time = curremt_time
         m2_obj.save()

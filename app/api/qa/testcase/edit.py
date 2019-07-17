@@ -171,7 +171,7 @@ def edit(request):
 
     try:
         change_time=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        case_obj.isChange = 1
+        case_obj.is_change = 1
         case_obj.change_time = change_time
         case_obj.changer_id = get_user_object(request)
         case_obj.save()

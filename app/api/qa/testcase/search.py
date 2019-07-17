@@ -41,7 +41,7 @@ def search(request):
         data = TestCase.objects.\
             filter(Q(product_id=product_id) &
                 Q(status=status) &
-                Q(isDelete=0) & (
+                Q(is_delete=0) & (
                 Q(title__icontains=wd) | 
                 Q(id__icontains=wd))
                 ).\
@@ -49,7 +49,7 @@ def search(request):
                 creator=F("creator_id__realname")
                 ).\
             values("id","case_id","product_id","status","title","priority",
-                "isChange","isReview","creator","creator_id","create_time","last_time")
+                "is_change","is_review","creator","creator_id","create_time","last_time")
     except Exception as e:
         print(e)
         return JsonResponse({"status": 20004, "msg": u"查询异常错误，请联系管理员."})

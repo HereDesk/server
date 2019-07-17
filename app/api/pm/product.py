@@ -8,7 +8,7 @@ from django.db.models import F
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
-from app.models import Group
+from app.models import UserRole
 from app.models import Product
 from app.models import Release
 from app.models import ModuleA
@@ -171,7 +171,7 @@ def create_product(request):
             member = ProductMembers(
                 member_id = get_user_object(request),
                 product_id = prod,
-                role = Group.objects.get(group="originator"),
+                role = UserRole.objects.get(role="originator"),
                 status = 0
                 )
             member.save()

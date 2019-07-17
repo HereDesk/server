@@ -19,7 +19,7 @@ from django.views.decorators.http import require_http_methods
 
 from app.models import Authentication
 from app.models import User
-from app.models import Group
+from app.models import UserRole
 from app.models import Api
 from app.models import ApiPermissions
 
@@ -42,7 +42,7 @@ def api_list(request):
     try:
         tmp_data = []
         api_list = Api.objects.all().values("id","api_name","url","flag")
-        perm_data = ApiPermissions.objects.filter(Q(group=group)).values("api_id","is_allow")
+        perm_data = ApiPermissions.objects.filter(Q(user_role=group)).values("api_id","is_allow")
         for pl in api_list:
             pl["is_allow"] = 0
             tmp_data.append(pl)
@@ -108,14 +108,14 @@ def api_manage(request):
         return JsonResponse({"status":40001,"msg":"缺少参数"})
 
     try:
-        is_check_data = ApiPermissions.objects.filter(Q(api_id=api_id) & Q(group=group)).values('id')
+        is_check_data = ApiPermissions.objects.filter(Q(api_id=api_id) & Q(user_role=group)).values('id')
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
     if len(is_check_data) == 0:
         try:
             pg = ApiPermissions(
                 api_id = Api.objects.get(id=api_id),
-                group = Group.objects.get(group=group),
+                group = UserRole.objects.get(role=group),
                 is_allow = is_allow
                 )
             pg.save()

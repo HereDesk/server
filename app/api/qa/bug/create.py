@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.db.models import F
 from django.db.models import Count
+from django.db.models import Max
 
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -145,6 +146,8 @@ def create(request):
         remark = ""
 
     try:
+        # 缺陷辅助ID
+        aided_id = Bug.objects.filter(product_id=product_id).aggregate(Max('id'))
         bug = Bug(
             product_id = product_object,
             version_id = version_object,
@@ -165,32 +168,34 @@ def create(request):
             cell_id = cell_obj,
             m1_id = m1_obj,
             m2_id = m2_obj,
-            last_operation = get_user_object(request)
+            last_operation = get_user_object(request),
+            id = aided_id + 1
         )
         bug.save()
     except Exception as e:
         print(e)
         return JsonResponse({"status":20004,"msg":"提交bug失败"})
     else:
-        bug_id = Bug.objects.get(bug_id=bug.bug_id)
+        bobj = Bug.objects.get(bug_id=bug.bug_id)
+
+
         # 记录日志
         try:
             bug_log_record(request,get_user_object(request),bug_id,"create")
         except Exception as e:
             pass
 
-        # 保存附件
         try:
             if annex:
                 for f in annex:
                     aex = BugAnnex(
-                        bug_id = bug_id,
+                        bug_id = bobj,
                         url = f
                         )
                     aex.save()
         except Exception as e:
-            Bug.objects.get(bug_id=bug_id).delete()
-            return JsonResponse({"status":20004,"msg":"bug附件错误"})
+            Bug.objects.get(bug_id=bobj).delete()
+            return JsonResponse({"status":20004,"msg":"bug附件保存错误"})
         else:
             return JsonResponse({"status":20000,"msg":"缺陷保存成功"})
 

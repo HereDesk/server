@@ -46,7 +46,7 @@ def annex_delete(request):
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"没找到数据"})
     try:
-        ba_obj.isDelete = 1
+        ba_obj.is_delete = 1
         ba_obj.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"附件删除失败"})

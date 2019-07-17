@@ -293,7 +293,7 @@ def search(request):
     else:
         sort = "create_time"
         
-    query.children.append(Q(**{"isDelete":0}))
+    query.children.append(Q(**{"is_delete":0}))
 
     # simple search
     try:

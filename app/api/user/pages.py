@@ -50,7 +50,7 @@ def pages(request):
             user_product_role = list(query_user_product_role)[0]["role"]
 
         try:
-            data = PagesPermissions.objects.filter(Q(group=user_product_role)).\
+            data = PagesPermissions.objects.filter(Q(user_role=user_product_role)).\
                 annotate(
                     url=F("page_id__page_url")
                 ).\

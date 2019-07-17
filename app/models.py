@@ -22,32 +22,34 @@ class SystemConfig(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_system_config"
+        db_table = "system_config"
 
 """
   黑名单IP
 """
-class BlacklistIp(models.Model):
+class SystemBlacklistIp(models.Model):
     id = models.AutoField(primary_key=True)
     black_uid = models.UUIDField(default=uuid.uuid4, editable=False)
     ip = models.CharField(max_length=30)
     remark = models.CharField(max_length=100, blank=True, null=True)
-    create_time = models.DateTimeField(db_column="create_time",auto_now_add=True)  # Field name made lowercase.
+    create_time = models.DateTimeField(db_column="create_time",auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
         managed = False
-        db_table = "t_blacklist_ip"
+        db_table = "system_blacklist_ip"
 
 """
   keyword filter
 """
-class KeywordFilter(models.Model):
+class SystemKeywordFilter(models.Model):
     id = models.AutoField(primary_key=True)
     keyword = models.CharField(u"关键字",max_length=30)
     create_time = models.DateTimeField(auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_keyword_filter"
+        db_table = "system_keyword_filter"
 
 """
   keyword filter
@@ -60,20 +62,20 @@ class UserPosition(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_user_position"
+        db_table = "user_position"
 
 """
   用户组
 """
-class Group(models.Model):
+class UserRole(models.Model):
     id = models.AutoField(primary_key=True)
-    group = models.CharField(u"group", unique=True, max_length=20)
+    role = models.CharField(u"role", unique=True, max_length=20)
     name = models.CharField(u"名称",max_length=50)
     create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_group"
+        db_table = "user_role"
 
 """
   用户信息
@@ -107,7 +109,7 @@ class User(models.Model):
 
     class Meta:
         unique_together = ("email", "realname")
-        db_table = "t_user"
+        db_table = "user"
 
 """
   team
@@ -120,7 +122,7 @@ class Team(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_team"
+        db_table = "team"
 
 """
   team成员
@@ -136,9 +138,10 @@ class TeamMembers(models.Model):
     status = models.IntegerField(u"状态",choices=status,default=0)
     join_time = models.DateTimeField(u"创建时间",auto_now_add=True)
     banned_time = models.DateTimeField(u"禁止时间",null=True,blank=True,default=None)
-    
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
+
     class Meta:
-        db_table = "t_team_members"
+        db_table = "team_members"
 
 """
  token
@@ -147,9 +150,11 @@ class Authentication(models.Model):
     id = models.AutoField(primary_key=True)
     uid = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="uid")
     token = models.CharField(u"token", max_length=200,default=None)
+    create_time = models.DateTimeField(u"用户创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_authentication"
+        db_table = "user_authentication"
 
 """
   user config
@@ -164,13 +169,13 @@ class UserConfig(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_user_config"
+        db_table = "user_config"
 
 """
   产品表
 """
 class Product(models.Model):
-    isChange = (
+    is_change = (
         ("0", u"否"),
         ("1", u"是"),
     )
@@ -182,14 +187,14 @@ class Product(models.Model):
     status = models.IntegerField(u"状态", default=0)
     principal = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="principal",related_name="principal")
     remark = models.CharField(u"备忘",max_length=100,null=True,blank=True,default=None)
-    isChange = models.IntegerField(u"是否变更",choices=isChange,default=0)
+    is_change = models.IntegerField(u"是否变更",choices=is_change,default=0)
     start_time = models.DateTimeField(u"开始日期",null=True,blank=True,default=None)
     end_time = models.DateTimeField(u"结束日期",null=True,blank=True,default=None)
     create_time = models.DateTimeField(u"创建时间",auto_now_add=True)
     update_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "t_product"
+        db_table = "product"
 
 """
   产品组成员
@@ -202,13 +207,13 @@ class ProductMembers(models.Model):
     id = models.AutoField(primary_key=True)
     product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
     member_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="member_id")
-    role = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="role")
+    user_role = models.ForeignKey(UserRole,to_field="role",on_delete=models.CASCADE,db_column="user_role")
     status = models.IntegerField(u"状态",choices=status,default=0)
     join_time = models.DateTimeField(u"创建时间",auto_now_add=True)
     banned_time = models.DateTimeField(u"禁止时间",null=True,blank=True,default=None)
-    
+
     class Meta:
-        db_table = "t_product_members"
+        db_table = "product_members"
 
 """
   产品版本
@@ -227,17 +232,17 @@ class Release(models.Model):
     update_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "t_release"
+        db_table = "product_release"
 
 """
   模块维护
 """
 class ModuleA(models.Model):
-    isChange = (
+    is_change = (
         ("0", u"否"),
         ("1", u"是"),
     )
-    isDelete = (
+    is_delete = (
         ("0", u"否"),
         ("1", u"是")
     )
@@ -248,23 +253,23 @@ class ModuleA(models.Model):
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="module_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="module_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="module_deleter")
-    isChange = models.IntegerField(u"是否有修改",choices=isChange,default=0)
-    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    is_change = models.IntegerField(u"是否有修改",choices=is_change,default=0)
+    is_delete = models.IntegerField(u"是否删除",choices=is_delete,default=0)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     change_time = models.DateTimeField("修改时间",null=True,blank=True,default=None)
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
     update_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "t_module_1"
+        db_table = "product_module_1"
 
 # 二级模块
 class ModuleB(models.Model):
-    isChange = (
+    is_change = (
         ("0", u"否"),
         ("1", u"是"),
     )
-    isDelete = (
+    is_delete = (
         ("0", u"否"),
         ("1", u"是")
     )
@@ -275,39 +280,40 @@ class ModuleB(models.Model):
     creator_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="creator_id",related_name="module_b_creator")
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="module_b_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="module_b_deleter")
-    isChange = models.IntegerField(u"是否有修改",choices=isChange,default=0)
-    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    is_change = models.IntegerField(u"是否有修改",choices=is_change,default=0)
+    is_delete = models.IntegerField(u"是否删除",choices=is_delete,default=0)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     change_time = models.DateTimeField("修改时间",null=True,blank=True,default=None)
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
     update_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "t_module_2"
+        db_table = "product_module_2"
 
 """
   TEST: test case
 """
 class TestCase(models.Model):
-    isChange = (
+    is_change = (
         ("0", u"否"),
         ("1", u"是"),
     )
-    isDelete = (
+    is_delete = (
         ("0", u"否"),
         ("1", u"是")
     )
-    isReview = (
+    is_review = (
         ("0", u"未评审"),
         ("1", u"评审不通过"),
         ("2", u"评审通过")
     )
-    isStatus = (
+    is_status = (
         ("0", u"有效"),
         ("1", u"无效")
     )
-    id = models.AutoField(primary_key=True)
-    case_id = models.UUIDField(default=uuid.uuid4,unique=True, editable=False)
+    case_id = models.UUIDField(default=uuid.uuid4,unique=True, editable=False,primary_key=True)
+    id = models.IntegerField(u"测试用例辅助id",default=None)
+    case_sn = models.CharField(u"用户自定义用例编号",max_length=20,null=True,blank=True,default=None)
     product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id")
     m1_id = models.ForeignKey(ModuleA,to_field="m1_id",on_delete=models.CASCADE,null=True,db_column="m1_id")
     m2_id = models.ForeignKey(ModuleB,to_field="m2_id",on_delete=models.CASCADE,null=True,db_column="m2_id")
@@ -323,37 +329,37 @@ class TestCase(models.Model):
     changer_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="changer_id",null=True,related_name="case_changer")
     deleter_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="deleter_id",null=True,related_name="case_deleter")
     faller_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="faller_id",null=True,related_name="case_faller")
-    isChange = models.IntegerField(u"是否变更",choices=isChange,default=0)
-    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
-    isReview = models.IntegerField(u"是否评审",choices=isReview,default=0)
-    status = models.IntegerField(u"状态",choices=isStatus,default=0)
+    is_change = models.IntegerField(u"是否变更",choices=is_change,default=0)
+    is_delete = models.IntegerField(u"是否删除",choices=is_delete,default=0)
+    is_review = models.IntegerField(u"是否评审",choices=is_review,default=0)
+    status = models.IntegerField(u"状态",choices=is_status,default=0)
     fall_time = models.DateTimeField("失效时间",null=True,blank=True,default=None)
     change_time = models.DateTimeField("变更时间",null=True,blank=True,default=None)
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
-    last_time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
     last_operation = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="last_operation",null=True,related_name="case_last_operation")
+    last_time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
 
     class Meta:
-        db_table = "t_testcase"
+        db_table = "testcase"
 
 """
   测试用例文件
 """
 class TestCaseFiles(models.Model):
-    isDelete = (
+    is_delete = (
         ("0", u"否"),
         ("1", u"是")
     )
     id = models.AutoField(primary_key=True)
     case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id")
     url = models.CharField(u"路径",max_length=200)
-    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    is_delete = models.IntegerField(u"是否删除",choices=is_delete,default=0)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
 
     class Meta:
-        db_table = "t_testcase_files"
-        
+        db_table = "testcase_files"
+
 """
   TEST: test case suite version
 """
@@ -367,7 +373,7 @@ class TestSuite(models.Model):
     update_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "t_testsuite"
+        db_table = "testsuite"
 
 """
   Test: Test case suite cell
@@ -390,27 +396,27 @@ class TestSuiteCell(models.Model):
     update_time = models.DateTimeField(auto_now=True)
 
     class Meta:
-        db_table = "t_testsuite_cell"
+        db_table = "testsuite_cell"
 
 
 """
  testcase review
 """
 class TestCaseReview(models.Model):
-    isReview = (
+    is_review = (
         ("0", u"评审未通过"),
         ("1", u"评审通过"),
     )
     id = models.AutoField(primary_key=True)
     case_id = models.ForeignKey(TestCase,to_field="case_id",on_delete=models.CASCADE,db_column="case_id")
-    result = models.IntegerField(u"是否评审",choices=isReview,default=0)
+    result = models.IntegerField(u"是否评审",choices=is_review,default=0)
     remark = models.CharField(u"评审意见",max_length=2000,null=True,blank=True,default=None)
     user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="user_id")
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_testcase_review"
+        db_table = "testcase_review"
 
 
 """
@@ -424,9 +430,9 @@ class TestCaseHistory(models.Model):
     remark = models.CharField(u"备注",null=True,blank=True,default=None,max_length=2000)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
-    
+
     class Meta:
-        db_table = "t_testcase_history"
+        db_table = "testcase_history"
 
 """
   bug 类型
@@ -439,7 +445,7 @@ class BugType(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_type"
+        db_table = "bug_type"
 
 """
   bug 状态
@@ -452,7 +458,7 @@ class BugStatus(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_status"
+        db_table = "bug_status"
 
 """
   bug 优先级
@@ -465,7 +471,7 @@ class BugPriority(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_priority"
+        db_table = "bug_priority"
 
 """
   bug 来源
@@ -478,7 +484,7 @@ class BugSource(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_source"
+        db_table = "bug_source"
 
 """
   bug 严重程度
@@ -491,7 +497,7 @@ class BugSeverity(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_severity"
+        db_table = "bug_severity"
 
 """
   bug 解决方案
@@ -504,18 +510,18 @@ class BugSolution(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_solution"
+        db_table = "bug_solution"
 
 """
   bug
 """
 class Bug(models.Model):
-    isDelete = (
+    is_delete = (
         ("0", u"否"),
         ("1", u"是")
     )
-    id = models.AutoField(primary_key=True)
-    bug_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
+    bug_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False,primary_key=True)
+    id = models.IntegerField(u"辅助id",default=None)
     product_id = models.ForeignKey(Product,to_field="product_id",on_delete=models.CASCADE,db_column="product_id",related_name="bug_product_id")
     m1_id = models.ForeignKey(ModuleA,to_field="m1_id",on_delete=models.CASCADE,null=True,db_column="m1_id")
     m2_id = models.ForeignKey(ModuleB,to_field="m2_id",on_delete=models.CASCADE,null=True,db_column="m2_id")
@@ -545,31 +551,32 @@ class Bug(models.Model):
     closed_time = models.DateTimeField(u"关闭时间",null=True,blank=True,default=None)
     hangUp_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="hangUp_id",null=True,related_name="hangUpBy")
     hangUp_time = models.DateTimeField(u"挂起时间",null=True,blank=True,default=None)
-    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    is_delete = models.IntegerField(u"是否删除",choices=is_delete,default=0)
     delete_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="delete_id",null=True,related_name="DeleteBy")
     delete_time = models.DateTimeField("删除时间",null=True,blank=True,default=None)
     last_time = models.DateTimeField(u"最后一次操作时间",auto_now=True)
     last_operation = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,db_column="last_operation",null=True,related_name="last_operation")
 
     class Meta:
-        db_table = "t_bug"
+        db_table = "bug"
 
 """
   bug 附件
 """
 class BugAnnex(models.Model):
-    isDelete = (
+    is_delete = (
         ("0", u"否"),
         ("1", u"是")
     )
     id = models.AutoField(primary_key=True)
     bug_id = models.ForeignKey(Bug,to_field="bug_id",on_delete=models.CASCADE,db_column="bug_id")
     url = models.CharField(u"路径",max_length=100)
-    isDelete = models.IntegerField(u"是否删除",choices=isDelete,default=0)
+    is_delete = models.IntegerField(u"是否删除",choices=is_delete,default=0)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_annex"
+        db_table = "bug_annex"
 
 """
  bug report
@@ -579,9 +586,10 @@ class BugReport(models.Model):
     report_id = models.UUIDField(default=uuid.uuid4, unique=True,editable=False)
     content = models.TextField(max_length=100000)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_bug_report"
+        db_table = "bug_report"
 
 """
   bug history
@@ -601,9 +609,9 @@ class BugHistory(models.Model):
     remark_status = models.IntegerField(u"备注状态",choices=remark_status,default=1)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
-    
+
     class Meta:
-        db_table = "t_bug_history"
+        db_table = "bug_history"
 
 """
   用户的log
@@ -621,7 +629,7 @@ class LoggedLog(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_logged_log"
+        db_table = "logged_log"
 
 """
   用户的log
@@ -635,10 +643,10 @@ class UserLog(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_user_log"
+        db_table = "user_log"
 
 """
-  权限
+  api
 """
 class Api(models.Model):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
@@ -646,14 +654,15 @@ class Api(models.Model):
     api_code = models.CharField(u"权限code",unique=True,max_length=200)
     url = models.CharField(max_length=200)
     flag = models.CharField(u"标记",max_length=200)
-    desc = models.CharField(u"介绍说明",max_length=500,default=None)
+    desc = models.CharField(u"介绍说明",max_length=500,null=True,default=None)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_api"
+        db_table = "api"
 
 """
-  权限
+  api权限
 """
 class ApiPermissions(models.Model):
     is_allow = (
@@ -662,30 +671,32 @@ class ApiPermissions(models.Model):
     )
     id = models.AutoField(primary_key=True)
     api_id = models.ForeignKey(Api,to_field="id",on_delete=models.CASCADE,db_column="api_id")
-    group = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="group")
+    user_role = models.ForeignKey(UserRole,to_field="role",on_delete=models.CASCADE,db_column="user_role")
     is_allow = models.IntegerField(choices=is_allow,default=1)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_api_permissions"
+        db_table = "api_permissions"
 
 
 """
-  权限
+  前端页面
 """
 class Pages(models.Model):
     id = models.UUIDField(primary_key=True,default=uuid.uuid4, unique=True,editable=False)
     page_name = models.CharField(u"页面名称",unique=True,max_length=100)
     page_url = models.CharField(u"页面url",max_length=200,unique=True)
     flag = models.CharField(u"标记",max_length=200)
-    desc = models.CharField(u"介绍说明",max_length=500,default=None)
+    desc = models.CharField(u"介绍说明",max_length=500,null=True,default=None)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_pages"
+        db_table = "pages"
 
 """
-  权限
+  前端页面权限
 """
 class PagesPermissions(models.Model):
     is_allow = (
@@ -694,15 +705,16 @@ class PagesPermissions(models.Model):
     )
     id = models.AutoField(primary_key=True)
     page_id = models.ForeignKey(Pages,to_field="id",on_delete=models.CASCADE,db_column="page_id")
-    group = models.ForeignKey(Group,to_field="group",on_delete=models.CASCADE,db_column="group")
+    user_role = models.ForeignKey(UserRole,to_field="role",on_delete=models.CASCADE,db_column="user_role")
     is_allow = models.IntegerField(choices=is_allow,default=1)
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_pages_permissions"
+        db_table = "pages_permissions"
 
 """
-  bug 附件
+  文件
 """
 class Files(models.Model):
     id = models.AutoField(primary_key=True)
@@ -711,9 +723,10 @@ class Files(models.Model):
     original_name = models.CharField(u"文件名称",max_length=100)
     user_id = models.ForeignKey(User, to_field="user_id", on_delete=models.CASCADE,null=True,db_column="user_id")
     create_time = models.DateTimeField(u"创建时间", auto_now_add=True)
+    update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_files"
+        db_table = "files"
 
 """
   QA config
@@ -727,4 +740,4 @@ class QaConfig(models.Model):
     update_time = models.DateTimeField(u"更新时间", auto_now=True)
 
     class Meta:
-        db_table = "t_qa_config"
+        db_table = "qa_config"

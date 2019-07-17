@@ -56,7 +56,7 @@ def details(request):
         review = TestCaseReview.objects.filter(Q(case_id=case_id)).\
             annotate(realname=F("user_id__realname")).values("remark","realname","create_time","result")
 
-        annex = TestCaseFiles.objects.filter(Q(case_id=case_id) & Q(isDelete=0)).values("url")
+        annex = TestCaseFiles.objects.filter(Q(case_id=case_id) & Q(is_delete=0)).values("url")
 
         annex_tmp = []
         for ax in annex:

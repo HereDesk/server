@@ -33,7 +33,7 @@ def delete(request):
         return JsonResponse({"status":40004,"msg":"bug_id不存在"})
 
     try:
-        data.isDelete = 1
+        data.is_delete = 1
         data.status = BugStatus.objects.get(key="Closed")
         data.save()
     except Exception as e:

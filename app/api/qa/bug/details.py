@@ -57,7 +57,7 @@ def details(request):
             "fixed_user","fixed_id","fixed_time",\
             "closed_user","closed_id","closed_time","last_time")
 
-    annex = BugAnnex.objects.filter(Q(bug_id=bug_id) & Q(isDelete=0)).values("url")
+    annex = BugAnnex.objects.filter(Q(bug_id=bug_id) & Q(is_delete=0)).values("url")
 
     annex_tmp = []
     for ax in annex:

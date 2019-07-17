@@ -49,7 +49,7 @@ def data_list(request):
                 creator=F("creator_id__realname")
                 ).\
             values("id","case_id","product_id","status","title","priority",\
-                "isChange","isReview",\
+                "is_change","is_review",\
                 "creator","creator_id","create_time","last_time").\
             order_by("-create_time")
     except Exception as e:
@@ -83,7 +83,7 @@ def valid_list(request):
         q1.children.append(Q(**{"m1_id":m1_id}))
             
     try:
-        q1.children.append(Q(**{"isDelete":0}))
+        q1.children.append(Q(**{"is_delete":0}))
         q1.children.append(Q(**{"status":0}))
         data = TestCase.objects.\
             filter(q1).\

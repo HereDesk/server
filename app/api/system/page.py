@@ -19,7 +19,7 @@ from django.views.decorators.http import require_http_methods
 
 from app.models import Authentication
 from app.models import User
-from app.models import Group
+from app.models import UserRole
 from app.models import Pages
 from app.models import PagesPermissions
 
@@ -45,7 +45,7 @@ def pages_list(request):
         pages_list = Pages.objects.all().\
             values("id","page_name","page_url","flag","desc").\
             order_by("page_name")
-        perm_data = PagesPermissions.objects.filter(Q(group=group)).values("page_id","is_allow")
+        perm_data = PagesPermissions.objects.filter(Q(role=group)).values("page_id","is_allow")
         for pl in pages_list:
             pl["is_allow"] = 0
             tmp_data.append(pl)
@@ -109,7 +109,7 @@ def manage(request):
         return JsonResponse({"status":40001,"msg":"缺少参数"})
 
     try:
-        is_check = PagesPermissions.objects.filter(Q(page_id=page_id) & Q(group=group)).values('id')
+        is_check = PagesPermissions.objects.filter(Q(page_id=page_id) & Q(user_role=group)).values('id')
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"服务器开小差了"})
@@ -117,7 +117,7 @@ def manage(request):
         try:
             pg = PagesPermissions(
                 page_id = Pages.objects.get(id=page_id),
-                group = Group.objects.get(group=group),
+                group = UserRole.objects.get(role=group),
                 is_allow = is_allow
                 )
             pg.save()

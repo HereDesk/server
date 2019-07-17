@@ -49,7 +49,7 @@ def review(request):
         return JsonResponse({"status":40001,"msg":"case_id无效"})
 
     try:
-        case_obj.isReview = result
+        case_obj.is_review = result
         case_obj.save()
 
         review_result = TestCaseReview(

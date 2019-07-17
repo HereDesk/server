@@ -33,7 +33,7 @@ def delete(request):
         return JsonResponse({"status":40004,"msg":"缺陷ID不能为空"})
 
 
-    is_check_testcase = TestCase.objects.filter(case_id=testcase_id).values_list("isDelete")
+    is_check_testcase = TestCase.objects.filter(case_id=testcase_id).values_list("is_delete")
     if len(is_check_testcase) == 0:
         return JsonResponse({"status":20004,"msg":"该条记录不存在"})
     try:
@@ -46,7 +46,7 @@ def delete(request):
         tc = TestCase.objects.get(case_id=testcase_id)
         tc.deleter_id = get_user_object(request)
         tc.delete_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        tc.isDelete = 1
+        tc.is_delete = 1
         tc.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"删除失败"})
@@ -71,7 +71,7 @@ def annex_delete(request):
     except Exception as e:
         return JsonResponse({"status":40004,"msg":"没找到数据"})
     try:
-        file_obj.isDelete = 1
+        file_obj.is_delete = 1
         file_obj.save()
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"附件删除失败"})

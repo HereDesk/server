@@ -19,7 +19,7 @@ from django.views.decorators.http import require_http_methods
 
 from app.models import User
 from app.models import Authentication
-from app.models import Group
+from app.models import UserRole
 
 from app.models import SystemConfig
 from app.models import UserConfig
@@ -63,8 +63,8 @@ def user_list(request):
 """
 @require_http_methods(["GET"])
 def group(request):
-    data = Group.objects.\
-        filter(~Q(group="admin")).\
+    data = UserRole.objects.\
+        filter(~Q(role="admin")).\
         values('group','name')
     return JsonResponse({"status":20000,"data":list(data)})
 

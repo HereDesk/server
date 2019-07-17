@@ -13,7 +13,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from app.models import User
-from app.models import Group
+from app.models import UserRole
 from app.models import Authentication
 from app.models import Product
 from app.models import ProductMembers
@@ -38,7 +38,7 @@ def members_list(request):
         data = ProductMembers.objects.\
             filter(
                 Q(product_id=product_id) & 
-                Q(member_id__group=group) & 
+                Q(member_id__user_role=role) & 
                 ~Q(member_id__realname__icontains=u"管理员")).\
             order_by("-role").\
             annotate(
@@ -83,7 +83,7 @@ def product_members_join(request):
         return JsonResponse({"status": 20004, "msg": "product_id无效."})
 
     try:
-        role_object = Group.objects.get(group=role)
+        role_object = UserRole.objects.get(role=role)
     except Exception as e:
         return JsonResponse({"status": 20004, "msg": "product_id无效."})
 
