@@ -171,7 +171,7 @@ def create_product(request):
             member = ProductMembers(
                 member_id = get_user_object(request),
                 product_id = prod,
-                role = UserRole.objects.get(role="originator"),
+                user_role = UserRole.objects.get(role="originator"),
                 status = 0
                 )
             member.save()

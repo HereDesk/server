@@ -44,9 +44,9 @@ def userinfo(request):
         values("code","code_value")
     config = {}
     for i in query_cfg:
-        config.update({i["code"]:i["code_value"]}) 
+        config.update({i["code"]:i["code_value"]})
     return JsonResponse({"status":20000,"data":data[0],"config":config})
-    
+
 """
   用户列表
 """
@@ -65,7 +65,7 @@ def user_list(request):
 def group(request):
     data = UserRole.objects.\
         filter(~Q(role="admin")).\
-        values('group','name')
+        values('role','name')
     return JsonResponse({"status":20000,"data":list(data)})
 
 
@@ -80,14 +80,14 @@ def banned(request):
     is_check_admin = User.objects.filter(Q(user_id=uid) & Q(user_status='1'))
     if len(is_check_admin) == 0:
         return JsonResponse({"status":14444,"msg":"您不是管理员，不能进行此项操作"})
-    
+
     try:
         req_info = json.loads(request.body)
         user_id = req_info["user_id"]
         code = req_info["code"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"请求缺少必要的值."})
-    
+
     # 用户检测
     is_check_banned = User.objects.filter(Q(user_id=user_id)).values_list('user_status')
     if len(is_check_banned) == 1:
@@ -148,7 +148,7 @@ def add(request):
     n = User.objects.filter(email=email).count()
     if n > 0:
         return JsonResponse({"status":40004,"msg":email + "已被使用"})
-        
+
     r = User.objects.filter(realname=realname).count()
     if r > 0:
         return JsonResponse({"status":40004,"msg":realname + "已被使用"})

@@ -274,11 +274,11 @@ class CheckUserIdentity(MiddlewareMixin):
                             Q(member_id=user_id) &
                             Q(status=0)
                         ).\
-                        values("role")[0]
+                        values("user_role")[0]
                     if len(query_product_role) == 0:
                         return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
                     else:
-                        product_role = query_product_role["role"]
+                        product_role = query_product_role["user_role"]
 
                         # 检查接口权限
                         print(product_role,self.path)

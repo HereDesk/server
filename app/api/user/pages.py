@@ -40,14 +40,14 @@ def pages(request):
             user_product_role = None
             query_user_product_role = ProductMembers.objects.\
                 filter(Q(product_id=product_id) & Q(member_id=uid) & Q(status=0)).\
-                values("role")
+                values("user_role")
             if len(query_user_product_role) == 0:
                 return JsonResponse({"status":40004,"msg":"没有此项目的访问权限"})
         except Exception as e:
             print(e)
             return JsonResponse({"status":40001,"msg":"异常错误"})
         else:
-            user_product_role = list(query_user_product_role)[0]["role"]
+            user_product_role = list(query_user_product_role)[0]["user_role"]
 
         try:
             data = PagesPermissions.objects.filter(Q(user_role=user_product_role)).\

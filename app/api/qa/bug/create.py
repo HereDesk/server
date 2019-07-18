@@ -2,7 +2,7 @@
 # -*- coding:utf8 -*-
 import json
 import time
-from datetime import datetime 
+from datetime import datetime
 
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -71,7 +71,7 @@ def create(request):
                 m2_obj = ModuleB.objects.get(m2_id=m2_id)
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-        
+
     try:
         if "case_id" in req and req["case_id"]:
             case_id = req["case_id"]
@@ -80,7 +80,7 @@ def create(request):
             case_obj = None
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"case_id无效"})
-        
+
     try:
         if "cell_id" in req and req["cell_id"]:
             cell_id = req["cell_id"]
@@ -102,7 +102,7 @@ def create(request):
         assignedTo_object = None
         assignedToDate = None
         status = BugStatus.objects.get(key="New")
-    
+
     # product_code
     try:
         product_object = Product.objects.get(product_id=product_id)
@@ -148,6 +148,10 @@ def create(request):
     try:
         # 缺陷辅助ID
         aided_id = Bug.objects.filter(product_id=product_id).aggregate(Max('id'))
+        if not aided_id["id__max"]:
+            aided_id = 1
+        else:
+            aided_id = int(aided_id["id__max"]) + 1
         bug = Bug(
             product_id = product_object,
             version_id = version_object,
@@ -169,7 +173,7 @@ def create(request):
             m1_id = m1_obj,
             m2_id = m2_obj,
             last_operation = get_user_object(request),
-            id = aided_id + 1
+            id = aided_id
         )
         bug.save()
     except Exception as e:
@@ -238,7 +242,7 @@ def edit(request):
             bug_obj.m1_id = m1_obj
         except Exception as e:
             return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-            
+
         if len(req["module_id"]) == 2:
             try:
                 m2_obj = ModuleB.objects.get(m2_id=req["module_id"][1])

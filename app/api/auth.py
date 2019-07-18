@@ -16,7 +16,7 @@ def is_admin(request):
     token = get_token(request)
     user = Authentication.objects.\
         filter(
-            Q(token=token) & 
+            Q(token=token) &
             Q(uid__identity=0)).\
         values_list("uid")
     if len(user) == 1:
@@ -87,10 +87,11 @@ def get_prdocut_user_role(request,product_id):
         uid = Authentication.objects.filter(token=token).values_list("uid",flat=True)[0]
         role = ProductMembers.objects.\
             filter(Q(members_id=uid) & Q(product_id=product_id)).\
-            values_list("role",flat=True)[0]
+            values_list("user_role",flat=True)[0]
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"获取用户项目权限错误"})
     else:
+        print("--------------+++++++",role)
         return role
 
 

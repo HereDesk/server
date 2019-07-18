@@ -27,7 +27,7 @@ curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 """
 @require_http_methods(["GET"])
 def members_list(request):
-    
+
     try:
         product_id = request.GET["product_id"]
     except Exception as e:
@@ -37,29 +37,31 @@ def members_list(request):
         role = request.GET["role"]
         data = ProductMembers.objects.\
             filter(
-                Q(product_id=product_id) & 
-                Q(member_id__user_role=role) & 
+                Q(product_id=product_id) &
+                Q(member_id__user_role=role) &
                 ~Q(member_id__realname__icontains=u"管理员")).\
-            order_by("-role").\
+            order_by("-user_role").\
             annotate(
                 realname = F("member_id__realname"),
                 user_id = F("member_id"),
-                role_name=F("role__name")).\
+                role=F("user_role"),
+                role_name=F("user_role__name")).\
             values("user_id","realname","role_name","status","join_time","banned_time")
     else:
         data = ProductMembers.objects.\
             filter(
-                Q(product_id=product_id) & 
+                Q(product_id=product_id) &
                 ~Q(member_id__realname__icontains=u"管理员")
                 ).\
-            order_by("-role").\
+            order_by("-user_role").\
             annotate(
                 realname = F("member_id__realname"),
                 user_id = F("member_id"),
-                role_name=F("role__name")).\
+                role=F("user_role"),
+                role_name=F("user_role__name")).\
             values("user_id","realname","role","role_name","status","join_time","banned_time")
 
-    
+
     return JsonResponse({"status": 20000, "product_id":product_id,"data": list(data)})
 
 """
@@ -68,7 +70,7 @@ def members_list(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def product_members_join(request):
-    
+
     try:
         rep = json.loads(request.body)
         product_id = rep["product_id"]
@@ -101,7 +103,7 @@ def product_members_join(request):
             member_id = uid,
             product_id = product_object,
             status = 0,
-            role = role_object
+            user_role = role_object
             )
         data.save()
     except Exception as e:
@@ -117,7 +119,7 @@ def product_members_join(request):
 @csrf_exempt
 @require_http_methods(["POST"])
 def product_members_ban(request):
-    
+
     try:
         rep = json.loads(request.body)
         product_id = rep["product_id"]
@@ -145,7 +147,7 @@ def product_members_ban(request):
 @require_http_methods(["POST"])
 @csrf_exempt
 def product_members_rejoin(request):
-    
+
     try:
         rep = json.loads(request.body)
         product_id = rep["product_id"]
