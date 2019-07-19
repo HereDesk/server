@@ -183,7 +183,7 @@ class CheckUserIdentity(MiddlewareMixin):
             return JsonResponse({"status": 14402, "msg": "身份令牌无效，被阻拦，请求中止"})
         else:
             if user_data["user_status"] == 2:
-                return JsonResponse({"status": 14402, "msg": "已被封禁,请联系管理员."})
+                return JsonResponse({"status": 14402, "msg": "此用户已被封禁,请联系管理员."})
 
         # record log
         try:
@@ -233,6 +233,7 @@ class CheckUserIdentity(MiddlewareMixin):
             "/api/pm/release",
             "/api/pm/member",
             "/api/pm/module",
+            "/api/pm/module/1/list",
             "/api/qa/bug/list",
             "/api/qa/bug/search",
             "/api/qa/bug/create",
@@ -247,8 +248,7 @@ class CheckUserIdentity(MiddlewareMixin):
             "/api/qa/bug/report"
         ]
 
-        print("--------------")
-        print(user_data["identity"])
+        print("\n -> user identity is: {0}".format(user_data["identity"]))
 
         # super/admin user
         if user_data["identity"] == 0:
@@ -258,38 +258,43 @@ class CheckUserIdentity(MiddlewareMixin):
         if user_data["identity"] != "0" and self.path in super_path:
             return JsonResponse({"status":14444,"msg":"您的请求，超出了权限"})
 
+        # 公共api
         if self.path in common_path:
             return None
-        else:
-            if self.path in required_include_product_path:
-                if not self.product_id:
-                    return JsonResponse({"status":40004,"msg":"项目ID不能为空"})
+
+        # 必须携带项目ID的api
+        if self.path in required_include_product_path:
+            if not self.product_id:
+                return JsonResponse({"status":20004,"msg":"项目ID不能为空"})
+            user_id = user_data["uid"]
+
+            # 项目权限检查
+            try:
+                query_product_role = ProductMembers.objects.\
+                    filter(
+                        Q(product_id=self.product_id) &
+                        Q(member_id=user_id) &
+                        Q(status=0)
+                    ).\
+                    values("user_role")[0]
+            except Exception as e:
+                return JsonResponse({"status":20004,"msg":"项目ID无效"})
+
+            if len(query_product_role) == 0:
+                return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
+            else:
+                product_role = query_product_role["user_role"]
+
+                # 检查接口权限
+                print(product_role,self.path)
+                is_num = ApiPermissions.objects.\
+                    filter(
+                        Q(user_role=product_role) &
+                        Q(api_id__url=self.path) &
+                        Q(is_allow=1)).count()
+                if is_num == 1:
+                    return None
                 else:
-                    user_id = user_data["uid"]
-
-                    # 项目权限检查
-                    query_product_role = ProductMembers.objects.\
-                        filter(
-                            Q(product_id=self.product_id) &
-                            Q(member_id=user_id) &
-                            Q(status=0)
-                        ).\
-                        values("user_role")[0]
-                    if len(query_product_role) == 0:
-                        return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
-                    else:
-                        product_role = query_product_role["user_role"]
-
-                        # 检查接口权限
-                        print(product_role,self.path)
-                        is_num = ApiPermissions.objects.\
-                            filter(
-                                Q(user_role=product_role) &
-                                Q(api_id__url=self.path) &
-                                Q(is_allow=1)).count()
-                        if is_num == 1:
-                            return None
-                        else:
-                            return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
+                    return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
 
 

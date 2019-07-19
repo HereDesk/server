@@ -9,6 +9,7 @@ from django.http import HttpResponse
 from django.db.models import Q
 from django.db.models import F
 from django.db.models import Sum
+from django.db.models import Max
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
@@ -48,13 +49,13 @@ def add(request):
         try:
             m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])
         except Exception as e:
-            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+            return JsonResponse({"status": 20004, "msg": u"产品模块无效."})
         try:
             if len(req["module_id"]) == 2:
                 m2_id = req["module_id"][1]
                 m2_obj = ModuleB.objects.get(m2_id=m2_id)
         except Exception as e:
-            return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
+            return JsonResponse({"status": 20004, "msg": u"产品模块无效."})
 
     DataInput = ""
     precondition = ""
@@ -83,6 +84,12 @@ def add(request):
         return JsonResponse({"status":20004,"msg":"超出字数限制。请检查前置条件、测试输入、备注项."})
 
     try:
+        # 辅助ID
+        aided_id = TestCase.objects.filter(product_id=product_id).aggregate(Max('id'))
+        if not aided_id["id__max"]:
+            aided_id = 1
+        else:
+            aided_id = int(aided_id["id__max"]) + 1
         data = TestCase(
             product_id = Product.objects.get(product_id=product_id),
             title = title,
@@ -95,7 +102,8 @@ def add(request):
             creator_id = get_user_object(request),
             priority = priority,
             m1_id = m1_obj,
-            m2_id = m2_obj
+            m2_id = m2_obj,
+            id = aided_id
             )
         data.save()
     except Exception as e:
@@ -103,7 +111,7 @@ def add(request):
         return JsonResponse({"status":20004,"msg":"用例保存失败"})
     else:
         case_id = TestCase.objects.get(case_id=data.case_id)
-        
+
         # 保存附件
         try:
             if "annex" in req:
@@ -158,7 +166,7 @@ def edit(request):
                 case_obj.m2_id = None
             except Exception as e:
                 return JsonResponse({"status": 40004, "msg": u"产品模块无效."})
-            
+
         if len(req["module_id"]) == 2:
             try:
                 m1_obj = ModuleA.objects.get(m1_id=req["module_id"][0])

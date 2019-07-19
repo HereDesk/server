@@ -76,7 +76,6 @@ def module_add_a(request):
         product_id = rep["product_id"]
         m1_name = rep["m1_name"]
     except Exception as e:
-        print(e)
         return JsonResponse({"status":40001,"msg":"product_id、module是必填项哦"})
     else:
         if len(m1_name) > 20:
