@@ -20,9 +20,7 @@ from app.api.auth import get_user_object
 # get cureent time
 curremt_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-"""
-  模块
-"""
+# 所有模块
 @require_http_methods(["GET"])
 def module_list_all(request):
     try:
@@ -32,11 +30,11 @@ def module_list_all(request):
 
     try:
         data = []
-        module_a = ModuleA.objects.filter(product_id=product_id).\
+        module_a = ModuleA.objects.filter(Q(product_id=product_id) & Q(is_delete=0)).\
             annotate(label=F("m1_name"),value=F("m1_id")).\
             values("label","m1_id","value").order_by("-id")
         for item in module_a:
-            query = ModuleB.objects.filter(m1_id=item["m1_id"]).\
+            query = ModuleB.objects.filter(Q(m1_id=item["m1_id"]) & Q(is_delete=0)).\
                 annotate(label=F("m2_name"),value=F("m2_id")).\
                 values("label","m2_id","value").order_by("-id")
             if len(query) > 0:
@@ -47,6 +45,7 @@ def module_list_all(request):
         return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
         return JsonResponse({"status":20000,"product_id":product_id,"data":data})
+
 
 # 一级模块
 @require_http_methods(["GET"])
@@ -176,17 +175,16 @@ def module_edit_b(request):
             return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
 
     try:
-        m2_obj = ModuleB.objects.get(id=m2_id)
+        m2_obj = ModuleB.objects.get(m2_id=m2_id)
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"该条记录不存在"})
 
-    query_data = ModuleB.objects.filter(Q(id=m2_id) & Q(m2_name=m2_name)).values("m2_name")
+    query_data = ModuleB.objects.filter(Q(m2_id=m2_id) & Q(m2_name=m2_name)).values("m2_name")
     if len(query_data) > 0:
         if list(query_data)[0]["m2_name"] == m2_name:
-            return JsonResponse({"status":20004,"msg":"此二级模块名称已存在"})
+            return JsonResponse({"status":20004,"msg":"新提交的模块名称与旧模块名称相同"})
 
     try:
-        # 保存module
         m2_obj.m2_name=m2_name
         m2_obj.is_change = 1
         m2_obj.changer_id = get_user_object(request)
@@ -207,15 +205,15 @@ def module_edit_b(request):
 def module_del_b(request):
 
     try:
-        m2_id = request.GET["id"]
+        m2_id = request.GET["m2_id"]
     except Exception as e:
         print(e)
         return JsonResponse({"status":40001,"msg":"缺少必填参数"})
 
     try:
-        m2_obj = ModuleB.objects.get(id=m2_id)
+        m2_obj = ModuleB.objects.get(m2_id=m2_id)
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"该条记录不存在"})
+        return JsonResponse({"status":20004,"msg":"该条记录不存在"})
     try:
         # 保存module
         m2_obj.is_delete = 1

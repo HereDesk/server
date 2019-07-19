@@ -96,7 +96,7 @@ urlpatterns = [
     # 管理员重置密码
     url(r"^api/user/reset_passwd", passwd.reset_passwd, name="reset_passwd"),
 
-    # dashboard 
+    # dashboard
     url(r"^api/dashboard/data_statistics", dashboard.data_statistics, name="data_statistics"),
 
     # 统计
@@ -108,8 +108,8 @@ urlpatterns = [
     url(r"^api/analyze/bug/developer", bug_analyze.developer, name="bug_analyze_developer"),
 
     url(r"api/analyze/testcase/my_today", testcase_analyze.my_today, name="testcase_analyze_my_today"),
-    
-    
+
+
     # 项目或产品
     url(r"^api/pm/product/cascader/my", product.product_release_cascader, name="product_release_cascader"),
     url(r"^api/pm/product/my", product.my_product_list, name="my_product_info"),
@@ -118,9 +118,7 @@ urlpatterns = [
 
     # module
     url(r"^api/pm/module/all/list", module.module_list_all, name="module_list_all"),
-    url(r"^api/pm/module/1/list", module.module_list_a, name="module_list_a"),
     url(r"^api/pm/module/1/add", module.module_add_a, name="add_module_a"),
-    url(r"^api/pm/module/2/list", module.module_list_b, name="module_list_b"),
     url(r"^api/pm/module/2/add", module.module_add_b, name="add_module_b"),
     url(r"^api/pm/module/2/edit", module.module_edit_b, name="module_edit_b"),
     url(r"^api/pm/module/2/del", module.module_del_b, name="module_del_b"),
@@ -162,11 +160,11 @@ urlpatterns = [
     url(r"^api/qa/testsuite/cell/run_list",cell_run_list.run_list,name="cell_run_list"),
     url(r"^api/qa/testsuite/cell/run",cell_run.run,name="cell_run"),
     url(r"^api/qa/testsuite/cell/loader_list",cell_loader_list.loader_list,name="cell_loader_list"),
-    url(r"^api/qa/testsuite/cell/add",cell_add.add,name="cell_add"), 
+    url(r"^api/qa/testsuite/cell/add",cell_add.add,name="cell_add"),
 
     # bug
     url(r"^api/qa/bug/bug_property",bug_support.property, name="bug_property"),
-    
+
     url(r"^api/qa/bug/list",bug_list.list, name="bug_list"),
     url(r"^api/qa/bug/search",bug_search.search, name="bug_search"),
     url(r"^api/qa/bug/create",bug_create.create, name="bug_create"),

@@ -233,7 +233,6 @@ class CheckUserIdentity(MiddlewareMixin):
             "/api/pm/release",
             "/api/pm/member",
             "/api/pm/module",
-            "/api/pm/module/1/list",
             "/api/qa/bug/list",
             "/api/qa/bug/search",
             "/api/qa/bug/create",
