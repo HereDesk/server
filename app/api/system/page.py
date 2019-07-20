@@ -36,7 +36,7 @@ from app.api.auth import is_admin
 @require_http_methods(["GET"])
 def pages_list(request):
     try:
-        group = request.GET["group"]
+        role = request.GET["role"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"参数错误"})
 
@@ -45,7 +45,7 @@ def pages_list(request):
         pages_list = Pages.objects.all().\
             values("id","page_name","page_url","flag","desc").\
             order_by("page_name")
-        perm_data = PagesPermissions.objects.filter(Q(role=group)).values("page_id","is_allow")
+        perm_data = PagesPermissions.objects.filter(Q(user_role=role)).values("page_id","is_allow")
         for pl in pages_list:
             pl["is_allow"] = 0
             tmp_data.append(pl)

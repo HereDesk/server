@@ -188,11 +188,11 @@ class CheckUserIdentity(MiddlewareMixin):
         # record log
         try:
             today = time.strftime("%Y-%m-%d", time.localtime())
-            if "product_release" in self.path:
-                flag = "登录"
+            if "userinfo" in self.path:
                 today_is_login = UserLog.objects.\
                     filter(
                         Q(create_time__gte=today) &
+                        Q(user_id=user_data["uid"]) &
                         Q(flag="登录") &
                         Q(ip=self.ip)).\
                     values("id","user_id")
@@ -200,14 +200,13 @@ class CheckUserIdentity(MiddlewareMixin):
                     record_log = UserLog(
                         user_id = get_user_object(request),
                         ip = self.ip,
-                        flag = flag
-                        )
+                        flag = "登录")
                     record_log.save()
                 else:
                     log_id = list(today_is_login)[0]['id']
-                    record_log = UserLog.objects.get(id=log_id)
-                    record_log.update_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
-                    record_log.save()
+                    robj = UserLog.objects.get(id=log_id)
+                    robj.update_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+                    robj.save()
         except Exception as e:
             print(e)
             pass
