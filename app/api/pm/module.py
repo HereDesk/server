@@ -53,36 +53,47 @@ def module_list_all(request):
 """
 @csrf_exempt
 @require_http_methods(["POST"])
-def module_add_a(request):
+def module_edit_a(request):
 
     try:
         rep = json.loads(request.body)
         product_id = rep["product_id"]
         m1_name = rep["m1_name"]
     except Exception as e:
-        return JsonResponse({"status":40001,"msg":"product_id、module是必填项哦"})
-    else:
-        if len(m1_name) > 20:
-            return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
+        return JsonResponse({"status":40001,"msg":"模块名称是必填项哦"})
+    
+    if len(m1_name) > 20:
+        return JsonResponse({"status":20004,"msg":"名称长度的合理范围为2到20位"})
 
     n = ModuleA.objects.filter(Q(m1_name=m1_name) & Q(product_id=product_id)).count()
     if n > 0:
         return JsonResponse({"status":20004,"msg":"名称已存在，请勿重复添加"})
 
-    try:
-        # 保存module
-        product_obj = Product.objects.get(product_id=product_id)
-        m = ModuleA(
-            product_id=product_obj,
-            m1_name=m1_name,
-            creator_id=get_user_object(request)
-            )
-        m.save()
-    except Exception as e:
-        print(e)
-        return JsonResponse({"status":20004,"msg":"一级模块保存失败"})
+    if "m1_id" in rep:
+        try:
+            product_obj = ModuleA.objects.get(m1_id=rep["m1_id"])
+            product_obj.m1_name = m1_name
+            product_obj.save()
+        except Exception as e:
+            return JsonResponse({"status":20004,"msg":"修改失败"})
+        else:
+            return JsonResponse({"status":20000,"msg":"修改成功"})
+        
     else:
-        return JsonResponse({"status":20000,"msg":"一级模块保存成功"})
+        try:
+            # 保存module
+            product_obj = Product.objects.get(product_id=product_id)
+            m = ModuleA(
+                product_id=product_obj,
+                m1_name=m1_name,
+                creator_id=get_user_object(request)
+                )
+            m.save()
+        except Exception as e:
+            print(e)
+            return JsonResponse({"status":20004,"msg":"一级模块保存失败"})
+        else:
+            return JsonResponse({"status":20000,"msg":"一级模块保存成功"})
 
 
 """
