@@ -61,8 +61,8 @@ def members_list(request):
                 role_name=F("user_role__name")).\
             values("user_id","realname","role","role_name","status","join_time","banned_time")
 
-
-    return JsonResponse({"status": 20000, "product_id":product_id,"data": list(data)})
+    product_data = Product.objects.filter(product_id=product_id).values_list("product_code",flat=True)
+    return JsonResponse({"status": 20000, "product_id":product_id,"product_code":product_data[0], "data": list(data)})
 
 """
   项目组加入成员

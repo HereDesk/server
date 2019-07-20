@@ -23,10 +23,7 @@ def get_release(request):
     except Exception as e:
         return JsonResponse({"status":40004,"msg":u"产品ID不能为空."})
 
-    try:
-        product_obj = Product.objects.get(product_id=product_id)
-    except Exception as e:
-        return JsonResponse({"status":20004,"msg":u"产品ID无效."})
+    product_data = Product.objects.filter(product_id=product_id).values_list("product_code",flat=True)
 
     try:
         version_data = Release.objects.\
@@ -42,7 +39,9 @@ def get_release(request):
         print(e)
         return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"data":list(version_data)})
+        return JsonResponse(
+            {"status":20000,"product_id":product_id,"product_code":product_data[0],"data":list(version_data)}
+        )
         
 
 """

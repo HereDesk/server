@@ -28,6 +28,8 @@ def module_list_all(request):
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"product_id不能为空哦"})
 
+    product_data = Product.objects.filter(product_id=product_id).values_list("product_code",flat=True)
+
     try:
         data = []
         module_a = ModuleA.objects.filter(Q(product_id=product_id) & Q(is_delete=0)).\
@@ -44,24 +46,7 @@ def module_list_all(request):
         print(e)
         return JsonResponse({"status":40004,"msg":u"异常错误，请联系管理员."})
     else:
-        return JsonResponse({"status":20000,"product_id":product_id,"data":data})
-
-
-# 一级模块
-@require_http_methods(["GET"])
-def module_list_a(request):
-    try:
-        product_id = request.GET["product_id"]
-    except Exception as e:
-        return JsonResponse({"status":40001,"msg":"product_id不能为空哦"})
-
-    try:
-        module = ModuleA.objects.filter(product_id=product_id).\
-            values("m1_name","m1_id").order_by("id")
-    except Exception as e:
-        return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
-    else:
-        return JsonResponse({"status":20000,"product_id":product_id,"data":list(module)})
+        return JsonResponse({"status":20000,"product_id":product_id,"product_code":product_data[0],"data":data})
 
 """
   模块：增加
@@ -99,26 +84,6 @@ def module_add_a(request):
     else:
         return JsonResponse({"status":20000,"msg":"一级模块保存成功"})
 
-
-# 二级模块
-@require_http_methods(["GET"])
-def module_list_b(request):
-    try:
-        req = request.GET
-        m1_id = req["m1_id"]
-    except Exception as e:
-        print(e)
-        return JsonResponse({"status":40001,"msg":"m1_id不能为空哦"})
-
-    try:
-        module = ModuleB.objects.\
-            filter(Q(m1_id=m1_id) & Q(is_delete=0)).\
-            values("id","m2_name").\
-            order_by("id")
-    except Exception as e:
-        return JsonResponse({"status":10004,"msg":u"异常错误，请联系管理员."})
-    else:
-        return JsonResponse({"status":20000,"data":list(module)})
 
 """
   二级模块：增加
