@@ -32,7 +32,7 @@ def product_release_cascader(request):
         annotate(product_code=F('product_id__product_code')).\
         values('product_code','product_id')
     if len(product) == 0:
-        return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
+        return JsonResponse({"status":21004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
     else:
         data = []
         for i in product:
@@ -68,7 +68,7 @@ def my_product_list(request):
         if is_admin_role:
             return JsonResponse({"status":20004,"msg":"没有任何项目,赶快去创建吧"})
         else:
-            return JsonResponse({"status":20004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
+            return JsonResponse({"status":21004,"msg":"检测到您不在任何项目列表中，请联系管理员添加！"})
     else:
         data = []
         for i in product:

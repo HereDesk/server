@@ -115,11 +115,12 @@ def api_manage(request):
         try:
             pg = ApiPermissions(
                 api_id = Api.objects.get(id=api_id),
-                group = UserRole.objects.get(role=group),
+                user_role = UserRole.objects.get(role=group),
                 is_allow = is_allow
                 )
             pg.save()
         except Exception as e:
+            print(e)
             return JsonResponse({"status":20004,"msg":"保存失败"})
         else:
             return JsonResponse({"status":20000,"msg":"保存成功"})

@@ -219,7 +219,7 @@ class CheckUserIdentity(MiddlewareMixin):
         # command path
         common_path = [
             "/api/support",
-            "/api/user",
+            "/api/user/info",
             "/api/qa/get_config",
             "/api/qa/create_config",
             "/api/pm/product"
@@ -227,11 +227,12 @@ class CheckUserIdentity(MiddlewareMixin):
 
         # required include product_id api_url
         required_include_product_path = [
-            "/api/dashboard",
-            "/api/analyze",
-            "/api/pm/release",
-            "/api/pm/member",
+            "/api/dashboard/data_statistics",
+            "/api/analyze/bug/query",
+            "/api/analyze/bug/date/create",
+            "/api/user/pages",
             "/api/pm/module",
+            "/api/pm/module/all/list",
             "/api/qa/bug/list",
             "/api/qa/bug/search",
             "/api/qa/bug/create",
@@ -242,7 +243,7 @@ class CheckUserIdentity(MiddlewareMixin):
             "/api/qa/testcase/export",
             "/api/qa/testcase/add",
             "/api/qa/testsuite/create",
-            # "/api/qa/testsuite/list",
+            "/api/qa/testsuite/list",
             "/api/qa/bug/report"
         ]
 
@@ -276,7 +277,7 @@ class CheckUserIdentity(MiddlewareMixin):
                     ).\
                     values("user_role")[0]
             except Exception as e:
-                return JsonResponse({"status":20004,"msg":"项目ID无效"})
+                return JsonResponse({"status":20005,"msg":"项目ID无效"})
 
             if len(query_product_role) == 0:
                 return JsonResponse({"status":14444,"msg":"您不在此项目中,请联系管理员"})
@@ -284,7 +285,6 @@ class CheckUserIdentity(MiddlewareMixin):
                 product_role = query_product_role["user_role"]
 
                 # 检查接口权限
-                print(product_role,self.path)
                 is_num = ApiPermissions.objects.\
                     filter(
                         Q(user_role=product_role) &
