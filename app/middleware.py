@@ -212,9 +212,7 @@ class CheckUserIdentity(MiddlewareMixin):
             pass
 
         # super path
-        super_path = [
-            "/api/system"
-        ]
+        super_path = "/api/system"
 
         # command path
         common_path = [
@@ -254,8 +252,8 @@ class CheckUserIdentity(MiddlewareMixin):
             return None
 
         # The average user
-        if user_data["identity"] != "0" and self.path in super_path:
-            return JsonResponse({"status":14444,"msg":"您的请求，超出了权限"})
+        if user_data["identity"] != "0" and super_path in self.path:
+            return JsonResponse({"status":14444,"msg":"您的请求，超出了权限。只有超级管理员才能访问"})
 
         # 公共api
         if self.path in common_path:
