@@ -119,7 +119,7 @@ urlpatterns = [
     # module
     url(r"^api/pm/module/all/list", module.module_list_all, name="module_list_all"),
     url(r"^api/pm/module/1/edit", module.module_edit_a, name="module_edit_a"),
-    url(r"^api/pm/module/2/add", module.module_add_b, name="add_module_b"),
+    url(r"^api/pm/module/1/del",module.module_del_a,name="module_del_a"),
     url(r"^api/pm/module/2/edit", module.module_edit_b, name="module_edit_b"),
     url(r"^api/pm/module/2/del", module.module_del_b, name="module_del_b"),
 
