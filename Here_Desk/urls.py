@@ -122,6 +122,7 @@ urlpatterns = [
     url(r"^api/pm/module/1/del",module.module_del_a,name="module_del_a"),
     url(r"^api/pm/module/2/edit", module.module_edit_b, name="module_edit_b"),
     url(r"^api/pm/module/2/del", module.module_del_b, name="module_del_b"),
+    url(r"^api/pm/module/count", module.module_count, name="module_count"),
 
     # 版本
     url(r"^api/pm/release/create", version.create_release, name="create_release"),

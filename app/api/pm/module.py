@@ -14,6 +14,8 @@ from app.models import Product
 from app.models import Release
 from app.models import ModuleA
 from app.models import ModuleB
+from app.models import Bug
+from app.models import TestCase
 from app.models import Authentication
 
 from app.api.auth import get_user_object
@@ -220,3 +222,57 @@ def module_del_b(request):
         return JsonResponse({"status":20004,"msg":"删除失败"})
     else:
         return JsonResponse({"status":20000,"msg":"删除成功"})
+
+
+
+"""
+    模块对应的数量
+"""
+@require_http_methods(["GET"])
+def module_count(request):
+
+    try:
+        query_type = request.GET["type"]
+        product_id = request.GET["product_id"]
+    except Exception as e:
+        return JsonResponse({"status":40001,"msg":"查询类型必填"})
+
+    if query_type not in ["testcase","bug"]:
+        return JsonResponse({"status":40001,"msg":"查询类型无效"})
+
+    # Bug
+    if query_type == "bug":
+
+        m1_data = Bug.objects.filter(~Q(status="Closed") & Q(product_id=product_id)).values("m1_id").annotate(num=Count("m1_id")).all()
+        m2_data = Bug.objects.filter(~Q(status="Closed") & Q(product_id=product_id)).values("m2_id","m1_id").annotate(num=Count("m2_id")).all()
+
+        tmp_m1 = { i["m1_id"]:i["num"] for i in m1_data if i["m1_id"]}
+        tmp_m2 = {}
+        for i in m2_data:
+            if i["m1_id"] or i["m2_id"]:
+                tmp_m2.setdefault(i['m1_id'], []).append( {"m2_id":i["m2_id"],"num":i["num"]} )
+
+        data = []
+        for i,v in tmp_m2.items():
+            data.append({"m1_id":i,"num":tmp_m1[i],"m2_data":v})
+
+        return JsonResponse({"status":20000,"data":list(data)})
+
+    # 测试用例
+    if query_type == "testcase":
+
+        m1_data = TestCase.objects.filter( Q(status=0) & Q(is_delete=0) & Q(product_id=product_id)).values("m1_id").annotate(num=Count("m1_id")).all()
+        m2_data = TestCase.objects.filter( Q(status=0)  & Q(is_delete=0) & Q(product_id=product_id)).values("m2_id","m1_id").annotate(num=Count("m2_id")).all()
+
+        tmp_m1 = { i["m1_id"]:i["num"] for i in m1_data if i["m1_id"]}
+        tmp_m2 = {}
+        for i in m2_data:
+            if i["m1_id"] or i["m2_id"]:
+                tmp_m2.setdefault(i['m1_id'], []).append( {"m2_id":i["m2_id"],"num":i["num"]} )
+
+        data = []
+        for i,v in tmp_m2.items():
+            data.append({"m1_id":i,"num":tmp_m1[i],"m2_data":v})
+
+        return JsonResponse({"status":20000,"data":list(data)})
+
