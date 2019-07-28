@@ -50,7 +50,7 @@ from app.api.qa.bug import export as bug_export
 from app.api.qa.bug import action as bug_action
 from app.api.qa.bug import annex as bug_annex
 from app.api.qa.bug import support as bug_support
-
+from app.api.qa.bug import tags as bug_tags
 
 from app.api.qa.testcase import datalist as case_list
 from app.api.qa.testcase import search as case_search
@@ -186,6 +186,9 @@ urlpatterns = [
 
     url(r"^api/qa/bug/remarks",bug_action.remarks,name="bug_remarks"),
     url(r"^api/qa/bug/annex/delete",bug_annex.delete,name="annex_delete"),
+
+    # bug标签
+    url(r"^api/qa/bug/tags/add",bug_tags.add,name="bug_label_add"),
 
 
     # 权限控制

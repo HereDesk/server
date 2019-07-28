@@ -6,7 +6,7 @@ from datetime import datetime
 from datetime import datetime,timedelta
 
 import operator
-from functools import reduce  
+from functools import reduce
 
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -201,7 +201,7 @@ def handle_advanced_search(req):
             fixed_user_query.children.append(Q(**{"fixed_id__realname__in":fixed_user_list}))
             conditions.add(fixed_user_query, "AND")
 
-    
+
     if "assignedTo_user" in req:
         assignedTo_user = req["assignedTo_user"]
         if assignedTo_user:
@@ -286,13 +286,13 @@ def search(request):
                     query.children.append(Q(**{"version_id":list(release_query)[0]['id']}))
         except Exception as e:
             return JsonResponse({"status":40001,"msg":"产品名称或版本号错误"})
-    
+
     # get sort field
     if "sort" in req and "sort_field" in req:
         sort = req["sort"] + req["sort_field"]
     else:
         sort = "create_time"
-        
+
     query.children.append(Q(**{"is_delete":0}))
 
     # simple search
@@ -305,14 +305,14 @@ def search(request):
         query.children.append(Q(**{"id__icontains":wd}))
     else:
         developer_list = ProductMembers.objects.\
-            filter(Q(product_id=product_id) & Q(role="developer")).\
+            filter(Q(product_id=product_id) & Q(user_role="developer")).\
             annotate(realname = F("member_id__realname")).\
             values("realname")
         developer_list = [ i["realname"] for i in developer_list ]
         if wd in developer_list:
             query.children.append(Q(**{"assignedTo_id__realname__icontains":wd}))
         else:
-            query.children.append(Q(**{"title__icontains":wd}))
+            query.children.append(Q(**{"title__icontains":wd}) | Q(**{"bug_label":wd}))
 
     if "status" in req:
         if req["status"] == "all":
@@ -340,11 +340,11 @@ def search(request):
                 last_operation_user=F("last_operation__realname")
             ).\
             order_by(sort).\
-            values("id","bug_id","title","status","status_name","solution_name",\
+            values("id","product_id","bug_id","title","status","status_name","solution_name",\
             "priority","priority_name","severity","severity_name","solution",\
             "creator_id","creator_user","create_time",\
             "assignedTo_user","assignedTo_time","fixed_id","fixed_time","closed_id","closed_time",\
-            "last_operation_user","last_time")
+            "last_operation_user","last_time","bug_label")
     except Exception as e:
         return JsonResponse({"status": 40004, "msg": u"异常错误，请联系管理员."})
     else:

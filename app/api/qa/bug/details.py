@@ -28,7 +28,7 @@ def details(request):
         bug_id = request.GET["bug_id"]
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"请求参数错误."})
-    
+
     data = Bug.objects.filter(bug_id=bug_id).\
         annotate(
             product_code=F("product_id__product_code"),
@@ -55,7 +55,7 @@ def details(request):
             "creator_id","creator_user","create_time",\
             "assignedTo_id","assignedTo_user","assignedTo_time",\
             "fixed_user","fixed_id","fixed_time",\
-            "closed_user","closed_id","closed_time","last_time")
+            "closed_user","closed_id","closed_time","last_time","bug_label")
 
     annex = BugAnnex.objects.filter(Q(bug_id=bug_id) & Q(is_delete=0)).values("url")
 
@@ -66,7 +66,7 @@ def details(request):
         except Exception as e:
             ax["suffix"] = "unknow"
         annex_tmp.append(ax)
-    
+
     if len(data) == 0:
         return JsonResponse({"status":20004,"msg":"没找到数据"})
     else:
@@ -93,4 +93,3 @@ def history(request):
         values("record_id","user_id","bug_id","username","desc","remark_status","remark","create_time")
 
     return JsonResponse({"status":20000,"data":list(data)})
-    

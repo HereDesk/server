@@ -4,7 +4,7 @@ import json
 import time
 import string
 from datetime import datetime
- 
+
 
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -39,7 +39,7 @@ def list(request):
     conditions = Q()
     q1 = Q()
     q1.connector = "AND"
-    
+
     try:
         req = request.GET.dict()
         product_id = req["product_id"]
@@ -74,7 +74,7 @@ def list(request):
     if "m1_id" in request.GET:
         m1_id = request.GET["m1_id"]
         q1.children.append(Q(**{"m1_id":m1_id}))
-        
+
     if "m2_id" in request.GET:
         m2_id = request.GET["m2_id"]
         q1.children.append(Q(**{"m2_id":m2_id}))
@@ -138,7 +138,7 @@ def list(request):
             sort = req["sort_field"]
     else:
         sort = "-create_time"
-            
+
     conditions.add(q1, "AND")
 
     try:
@@ -155,7 +155,7 @@ def list(request):
                 product_code=F("product_id__product_code")
             ).\
             order_by(sort).\
-            values("id","product_id","product_code",
+            values("id","product_id","product_code","bug_label",
                 "bug_id","title","status","status_name","solution_name",\
                 "priority","priority_name","severity","severity_name","solution",\
                 "creator_id","creator_user","create_time",\
