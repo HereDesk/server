@@ -44,7 +44,8 @@ def details(request):
             bug_type_name=F("bug_type__name"),
             bug_source_name=F("bug_source__name"),
             m1_name=F("m1_id__m1_name"),
-            m2_name=F("m2_id__m2_name")
+            m2_name=F("m2_id__m2_name"),
+            last_operation_user=F("last_operation__realname")
         ).\
         values("id","product_id","product_code","release","bug_id","case_id",\
             "m1_name","m2_name","m1_id","m2_id",\
@@ -55,7 +56,7 @@ def details(request):
             "creator_id","creator_user","create_time",\
             "assignedTo_id","assignedTo_user","assignedTo_time",\
             "fixed_user","fixed_id","fixed_time",\
-            "closed_user","closed_id","closed_time","last_time","bug_label")
+            "closed_user","closed_id","closed_time","last_time","last_operation_user","bug_label")
 
     annex = BugAnnex.objects.filter(Q(bug_id=bug_id) & Q(is_delete=0)).values("url")
 

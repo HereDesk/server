@@ -185,7 +185,7 @@ def create(request):
 
         # 记录日志
         try:
-            bug_log_record(request,get_user_object(request),bug_id,"create")
+            bug_log_record(request,get_user_object(request),bobj,"create")
         except Exception as e:
             pass
 
