@@ -45,21 +45,21 @@ def data_statistics(request):
     }
     # 分派给我(需要我处理的)
     try:
-        my_role = get_prdocut_user_role(request)
+        my_role = get_prdocut_user_role(request,product_id)
         if my_role == "test":
             WaitPending = Bug.objects.\
                 filter(
-                    Q(assignedTo_id=uid) & 
-                    Q(product_id=product_id) & 
+                    Q(assignedTo_id=uid) &
+                    Q(product_id=product_id) &
                     ~Q(status="closed")
                 ).count()
         else:
             WaitPending = Bug.objects.\
                 filter(
-                    Q(assignedTo_id=uid) & 
-                    Q(product_id=product_id) & 
+                    Q(assignedTo_id=uid) &
+                    Q(product_id=product_id) &
                     (
-                        Q(status="Open") | 
+                        Q(status="Open") |
                         Q(status="Hang-up") |
                         Q(status="Reopen")
                     )
@@ -81,9 +81,9 @@ def data_statistics(request):
     try:
         data_not_Fixed = Bug.objects.\
             filter(
-                Q(product_id=product_id) & 
-                ( 
-                    Q(status="Open") | 
+                Q(product_id=product_id) &
+                (
+                    Q(status="Open") |
                     Q(status="Hang-up") |
                     Q(status="Reopen")
                 )

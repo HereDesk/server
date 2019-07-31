@@ -67,7 +67,7 @@ def details(request):
         except Exception as e:
             ax["suffix"] = "unknow"
         annex_tmp.append(ax)
-
+    
     if len(data) == 0:
         return JsonResponse({"status":20004,"msg":"没找到数据"})
     else:
