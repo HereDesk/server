@@ -45,7 +45,7 @@ def data_statistics(request):
     }
     # 分派给我(需要我处理的)
     try:
-        my_group = get_user_group(request)
+        my_group = get_user_group(request,product_id)
         if my_group == 'test':
             WaitPending = Bug.objects.\
                 filter(
