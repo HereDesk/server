@@ -259,7 +259,6 @@ def search(request):
     # check value
     try:
         req = json.loads(request.body)
-        advanced_search = req["isShowAdSearch"]
         product_id = req["product_id"]
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": u"请求缺少必要的值."})
@@ -303,6 +302,8 @@ def search(request):
 
     if wd.isdigit():
         query.children.append(Q(**{"id__icontains":wd}))
+        if "status" in req:
+            del req["status"]
     else:
         developer_list = ProductMembers.objects.\
             filter(Q(product_id=product_id) & Q(user_role="developer")).\
@@ -322,11 +323,6 @@ def search(request):
         else:
             status = req["status"]
             query.children.append(Q(**{"status":status}))
-
-    # advanced search
-    # if advanced_search == "yes":
-    #     advanced_query = handle_advanced_search(req)
-    #     query.add(advanced_query,"AND")
 
     try:
         data = Bug.objects.filter(query). \
