@@ -24,14 +24,14 @@ def save_file_info(data_type,req,url):
             data.save()
         if data_type == "testcase":
             id = req["case_id"]
-            case_obj = Bug.objects.get(case_id=id)
+            case_obj = TestCase.objects.get(case_id=id)
             data = TestCaseFiles(case_id=case_obj,url=url)
             data.save()
     except Exception as e:
         print(e)
-        return JsonResponse({"status":20004,"name":"服务器出小差了"})
+        return JsonResponse({"status":20004,"msg":"服务器出小差了"})
     else:
-        return JsonResponse({"status":20000,"name":"附件保存成功"})
+        return JsonResponse({"status":20000,"msg":"附件保存成功"})
 
 @csrf_exempt
 def upload(request):
@@ -48,7 +48,7 @@ def upload(request):
         path = "media/testcase/"
     else:
         path = "media/other/"
-    
+
     try:
         original_filename = str(request.FILES.get("files"))
         suffix = str(original_filename.split(".")[-1]).lower()
@@ -67,7 +67,7 @@ def upload(request):
                 destination.write(chunk)
     except Exception as e:
         return JsonResponse({"status":20004,"msg":"文件写入失败"})
-    
+
     try:
         file_url = "/" + path+ filename
         data = Files(
@@ -84,4 +84,4 @@ def upload(request):
         elif data_type == "testcase" and "case_id" in request.GET:
             return save_file_info("testcase",request.GET,file_url)
         else:
-            return JsonResponse({"status":20000,"name":file_url})
+            return JsonResponse({"status":20000,"msg":"附件保存成功","name":file_url})
