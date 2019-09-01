@@ -31,7 +31,7 @@ def save_file_info(data_type,req,url):
         print(e)
         return JsonResponse({"status":20004,"msg":"服务器出小差了"})
     else:
-        return JsonResponse({"status":20000,"msg":"附件保存成功"})
+        return JsonResponse({"status":20000,"msg":"附件保存成功","name":url})
 
 @csrf_exempt
 def upload(request):
