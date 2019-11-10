@@ -36,8 +36,15 @@ except ImportError:
 
 current_date = datetime.date.today().strftime("%Y-%m-%d")
 
-# 获取agent
+def get_current_time():
+    return datetime.date.today().strftime("%Y-%m-%d %H:%M:%S")
+
+
 def get_user_agent(user_agent):
+    """
+    获取agent
+    """
+
     platform = ""
     browser = ""
     try:
@@ -155,15 +162,21 @@ class CheckUserIdentity(MiddlewareMixin):
             token = request.META["HTTP_AUTHORIZATION"].split(" ")[1]
         elif request.META.get("HTTP_AUTHENTICATION"):
             token = request.META["HTTP_AUTHENTICATION"].split(" ")[1]
+        elif request.META.get("HTTP_COOKIE"):
+            http_cookie = request.META.get("HTTP_COOKIE").split('=')
+            if http_cookie[0] == "token":
+                token = http_cookie[1]
+                if ";" in token:
+                    token = token.split(';')[0]
         elif "token" in request.COOKIES:
             token = request.COOKIES["token"]
         else:
-            return JsonResponse({"status":14402,"msg":"出错了,未取到token或cookie,请重新登录"})
+            return JsonResponse({"status":14402,"msg":"出错了,服务器未取到token或cookie,请重新登录"})
 
         if token:
-            pass
+            print("\nin the request, token is: {0}".format(token))
         else:
-            return JsonResponse({"status":14402,"msg":"出错了，未取到token或cookie"})
+            return JsonResponse({"status":14402,"msg":"出错了,token无效,请重新登录"})
 
         # check user token
         try:
@@ -173,10 +186,10 @@ class CheckUserIdentity(MiddlewareMixin):
                     identity=F("uid__identity"),
                     realname=F("uid__realname"),
                     user_status=F("uid__user_status")).\
-                values("uid","identity","token","realname","user_status")[:][0]
+                values("uid","identity","realname","user_status")[:][0]
 
-            print("---------------------userinfo----------------")
-            print(user_data,"\n")
+            print("\n{0}-------------------------------------".format(get_current_time()))
+            print("UserInfo:  {0} \n".format(user_data))
 
         except Exception as e:
             print(e)
@@ -245,8 +258,6 @@ class CheckUserIdentity(MiddlewareMixin):
             "/api/qa/bug/report"
         ]
 
-        print("\n -> user identity is: {0}".format(user_data["identity"]))
-
         # super/admin user
         if user_data["identity"] == 0:
             return None
@@ -292,5 +303,3 @@ class CheckUserIdentity(MiddlewareMixin):
                     return None
                 else:
                     return JsonResponse({"status":14444,"msg":"您没有此接口的访问权限，请联系管理员"})
-
-
