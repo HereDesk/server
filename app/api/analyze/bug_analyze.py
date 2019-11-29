@@ -3,7 +3,7 @@
 
 import json
 import time
-from datetime import datetime,timedelta
+from datetime import datetime,timedelta,date
 # from django.utils.timezone import now, timedelta
 from django.db.models.functions import TruncDate
 from django.db.models.functions import TruncHour
@@ -46,7 +46,7 @@ def query(request):
         qtype = request.GET['type']
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "请求缺少必要的值."})
-    
+
     if 'version' in request.GET:
         version = request.GET['version']
         try:
@@ -99,7 +99,7 @@ def date_create(request):
     if qtype == 'section':
         try:
             start_date = request.GET['start_date']
-            end_date = request.GET['end_date'] 
+            end_date = request.GET['end_date']
             end_date = datetime.strptime(end_date, "%Y-%m-%d") + timedelta(days = 1)
             q.children.append(Q(**{'create_time__gte':start_date}))
             q.children.append(Q(**{'create_time__lte':end_date}))
@@ -108,20 +108,23 @@ def date_create(request):
             return JsonResponse({"status":40001, "msg": "开始日期和结束日期不能为空"})
 
     if qtype == 'month':
-        month = time.strftime("%m", time.localtime())
-        q.children.append(Q(**{'create_time__month':month}))
+        month = time.strftime("%Y-%m", time.localtime())
+        q.children.append(Q(**{'create_time__icontains':month}))
 
     if qtype == 'year':
         year = time.strftime("%Y", time.localtime())
-        q.children.append(Q(**{"create_time__year":year}))
+        q.children.append(Q(**{"create_time__icontains":year}))
 
     if qtype == 'week':
-        week = datetime.now().isocalendar()[1]
-        q.children.append(Q(**{"create_time__week":week}))
+        monday = date.today()
+        one_day = timedelta(days=1)
+        while monday.weekday() != 0:
+            monday -= one_day
+        q.children.append(Q(**{"create_time__gte":monday}))
 
     if qtype == 'today':
-        td = time.strftime("%d", time.localtime())
-        q.children.append(Q(**{"create_time__day":td}))
+        td = time.strftime("%Y-%m-%d", time.localtime())
+        q.children.append(Q(**{"create_time__icontains":td}))
 
     try:
         data = []
@@ -129,8 +132,6 @@ def date_create(request):
             data = Bug.objects.filter(q).\
                 annotate(datetime=TruncDate('create_time')).values('datetime').\
                 annotate(num=Count('id'))
-            # print(Bug.objects.filter(q).annotate(datetime=TruncDate('create_time')).
-            # values('datetime').annotate(num=Count('id')).query)
         if qtype == 'year':
             data = Bug.objects.filter(q).\
                 annotate(datetime=ExtractMonth('create_time')).values('datetime').\
@@ -148,7 +149,9 @@ def date_create(request):
         print(e)
         return JsonResponse({'status':40004,"msg":"服务器开小差了，请联系管理员"})
     else:
-        return JsonResponse({"status": 20000, "product_id": product_id, "type":qtype, "data": list(data)})
+        source_data = list(data)
+        last_data = sorted(source_data, key=lambda x : x['datetime'])
+        return JsonResponse({"status": 20000, "product_id": product_id, "type":qtype, "data": list(last_data)})
 
 # 我今天的
 @require_http_methods(['GET'])
@@ -173,8 +176,8 @@ def my_today(request):
         data = ''
         if group == 'developer' or group == 'test':
             fixed = Bug.objects.filter(
-                    Q(fixed_time__gte=today) & 
-                    Q(fixed_id=uid) & 
+                    Q(fixed_time__gte=today) &
+                    Q(fixed_id=uid) &
                     Q(product_id=pcode)
                 ).\
                 aggregate(fixed=Count('fixed_time'))
@@ -185,7 +188,7 @@ def my_today(request):
                 Q(product_id=pcode)).\
                 aggregate(residue=Count('id'))
             create = Bug.objects.filter(
-                    Q(create_time__gte=today) & 
+                    Q(create_time__gte=today) &
                     Q(product_id=pcode)
                 ).\
                 aggregate(create=Count('create_time'))
@@ -198,7 +201,7 @@ def my_today(request):
             data = dict(create,**closed,**fixed,**residue)
         else:
             fixed = Bug.objects.filter(
-                    Q(fixed_time__gte=today) & 
+                    Q(fixed_time__gte=today) &
                     Q(product_id=pcode)
                 ).\
                 aggregate(fixed=Count('fixed_time'))
@@ -209,18 +212,18 @@ def my_today(request):
                 ).\
                 aggregate(residue=Count('id'))
             create = Bug.objects.filter(
-                    Q(create_time__gte=today) & 
+                    Q(create_time__gte=today) &
                     Q(product_id=pcode)
                 ).\
                 aggregate(create=Count('create_time'))
             closed = Bug.objects.filter(
-                    Q(closed_time__gte=today) & 
-                    Q(status='Closed') & 
+                    Q(closed_time__gte=today) &
+                    Q(status='Closed') &
                     Q(product_id=pcode)).\
                 aggregate(closed=Count('closed_time'))
             hangUp = Bug.objects.filter(
-                    Q(hangUp_time__gte=today) & 
-                    Q(status='Hang-Up') & 
+                    Q(hangUp_time__gte=today) &
+                    Q(status='Hang-Up') &
                     Q(product_id=pcode)
                 ).\
                 aggregate(hangUp=Count('hangUp_time'))
@@ -240,7 +243,7 @@ def tester(request):
         q.children.append(Q(**{'product_id':product_id}))
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "请求缺少必要的值."})
-    
+
     if 'version' in request.GET:
         version = request.GET['version']
         try:
@@ -270,7 +273,7 @@ def developer(request):
         q1.children.append(Q(**{'product_id':product_id}))
     except Exception as e:
         return JsonResponse({"status": 40001, "msg": "请求缺少必要的值."})
-    
+
     if 'version' in request.GET:
         version = request.GET['version']
         try:
