@@ -38,7 +38,7 @@ def upload(request):
 
     allow_suffix_list = [
         "jpg","png","jpeg","gif","bmp","svg","psd","tif","tga","ai",\
-        "html","js","css","py","less","scss","styl","java","cpp",\
+        "html","js","css","py","less","scss","styl","java","cpp","vue","nuve",\
         "docx","docx","xls","xlsx","ppt","pptx","pdf","txt","log","md","json","ini","yaml",\
         "mp4","mp3","mov","m4v","wmv","ts","3gp","avi","flv","mkv","mpeg",
         "zip","rar","tar","7z","bz2","gz"]
