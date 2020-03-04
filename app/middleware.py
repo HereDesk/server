@@ -12,7 +12,7 @@ from django.http import QueryDict
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.http import HttpResponse
-from django.shortcuts import render, render_to_response
+from django.shortcuts import render
 from django.db.models import Q
 from django.db.models import F
 from django.db.models import Count
@@ -163,11 +163,13 @@ class CheckUserIdentity(MiddlewareMixin):
         elif request.META.get("HTTP_AUTHENTICATION"):
             token = request.META["HTTP_AUTHENTICATION"].split(" ")[1]
         elif request.META.get("HTTP_COOKIE"):
-            http_cookie = request.META.get("HTTP_COOKIE").split('=')
-            if http_cookie[0] == "token":
-                token = http_cookie[1]
-                if ";" in token:
-                    token = token.split(';')[0]
+            http_cookie = request.META.get("HTTP_COOKIE")
+            http_cookie = http_cookie.replace(' ','')
+            cookies = dict([l.split("=", 1) for l in http_cookie.split(";")])
+            if "token" in cookies:
+                token = cookies["token"]
+            else:
+                return JsonResponse({"status":14402,"msg":"出错了,token无效,请重新登录"})
         elif "token" in request.COOKIES:
             token = request.COOKIES["token"]
         else:

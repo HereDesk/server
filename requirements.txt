@@ -10,3 +10,4 @@ Pillow==4.3.0
 requests
 XlsxWriter
 jsonfield==2.0.2
+django-jsonfield
