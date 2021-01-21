@@ -12,7 +12,7 @@ from django.http import QueryDict
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import render, render_to_response
 from django.db.models import Q
 from django.db.models import F
 from django.db.models import Count

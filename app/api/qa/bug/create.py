@@ -48,6 +48,7 @@ def create(request):
         release = req["release"]
         title = req["title"]
         steps = req["steps"]
+        reality_result = req["reality_result"]
         expected_result = req["expected_result"]
         assignedTo = req["assignedTo_id"]
         annex = req["annex"]
@@ -57,10 +58,6 @@ def create(request):
         bug_source = req["bug_source"]
     except Exception as e:
         return JsonResponse({"status":40001,"msg":"缺少必要的参数"})
-    
-    # 2020-3-4 实际结果可为空
-    if "reality_result" in req:
-        reality_result = req["reality_result"]
 
     m1_obj,m2_obj = None,None
     if "module_id" in req and req["module_id"]:
