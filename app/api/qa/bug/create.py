@@ -32,8 +32,10 @@ from app.models import BugSource
 from app.models import Bug
 from app.models import BugAnnex
 
-from app.api.auth import get_user_object
+from app.api.auth import get_user_object, get_user_name
 from app.api.qa.bug.support import bug_log_record
+
+from app.api.utils import PushToDingDing
 
 """
   bug create
@@ -176,32 +178,42 @@ def create(request):
             id = aided_id
         )
         bug.save()
+        bug_id = bug.bug_id
     except Exception as e:
         print(e)
         return JsonResponse({"status":20004,"msg":"提交bug失败"})
     else:
-        bobj = Bug.objects.get(bug_id=bug.bug_id)
+        bobj = Bug.objects.get(bug_id=bug_id)
 
+    # 记录日志
+    try:
+        bug_log_record(request,get_user_object(request),bobj,"create")
+    except Exception as e:
+        pass
 
-        # 记录日志
+    try:
+        if annex:
+            for f in annex:
+                aex = BugAnnex(
+                    bug_id = bobj,
+                    url = f
+                    )
+                aex.save()
+    except Exception as e:
+        Bug.objects.get(bug_id=bobj).delete()
+        return JsonResponse({"status":20004,"msg":"bug附件保存错误"})
+
+    # 钉钉消息推送
+    if req.get('is_dingding'):
         try:
-            bug_log_record(request,get_user_object(request),bobj,"create")
+            push = PushToDingDing()
+            push.bug_push(request, assignedTo, bug_id)
         except Exception as e:
-            pass
+            print(e)
+            return JsonResponse({"status":20004,"msg":"Bug创建成功, 但是钉钉消息推送失败, 请联系管理员."})
+        
+    return JsonResponse({"status":20000,"msg":"缺陷保存成功"})
 
-        try:
-            if annex:
-                for f in annex:
-                    aex = BugAnnex(
-                        bug_id = bobj,
-                        url = f
-                        )
-                    aex.save()
-        except Exception as e:
-            Bug.objects.get(bug_id=bobj).delete()
-            return JsonResponse({"status":20004,"msg":"bug附件保存错误"})
-        else:
-            return JsonResponse({"status":20000,"msg":"缺陷保存成功"})
 
 """
   bug edit

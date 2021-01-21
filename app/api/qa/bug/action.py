@@ -31,7 +31,7 @@ from app.api.auth import get_user_name
 
 from app.api.qa.bug.support import bug_log_record
 
-from app.api.utils import send_dingding
+from app.api.utils import PushToDingDing
 
 """
   bug: 附件删除
@@ -167,20 +167,14 @@ def assign(request):
             )
         log.save()
 
-        try:
-            # 获取操作人员
-            operator_name = get_user_name(request)
-            # 获取手机号
-            assignedTo_mobile = User.objects.filter(user_id=assignedTo).values_list("mobile",flat=True)[0]
-            # 获取bug title和优先级
-            bug_content = Bug.objects.filter(bug_id=bug_id).values('priority', "title")[0]
-            if operator_name and assignedTo_mobile:
-                bug_desc = "优先级: {0}\n内容: {1}".format(bug_content['priority'], bug_content['title'])
-                msg = "【{0} 分配了一个Bug给你】\n{1}\n详情: http://192.168.12.201/app/qa/bug/deatils/?bug_id={2}".format(operator_name, bug_desc, bug_id)
-                send_dingding(assignedTo_mobile, msg)
-        except Exception as e:
-            print(e)
-            return JsonResponse({"status":20004,"msg":"分配成功, 但是钉钉消息推送失败, 请联系管理员."})
+        # 钉钉消息推送
+        if req.get('is_dingding'):
+            try:
+                push = PushToDingDing()
+                push.bug_push(request, assignedTo, bug_id)
+            except Exception as e:
+                print(e)
+                return JsonResponse({"status":20004,"msg":"分配成功, 但是钉钉消息推送失败, 请联系管理员."})
             
         return JsonResponse({"status":20000,"msg":"分配成功"})
 
